@@ -23,10 +23,7 @@ class InventoryStockController(
         description = "SKU ID로 재고를 조정합니다. 예약된 재고 이하로 조정할 수 없습니다.",
     )
     @PatchMapping("/adjust/{skuId}")
-    fun increaseInventory(
-        @PathVariable skuId: String,
-        @RequestBody request: AdjustStockRequest
-    ): ApiResponse<Any> {
+    fun increaseInventory(@PathVariable skuId: String, @RequestBody request: AdjustStockRequest): ApiResponse<Any> {
         adjustStockUseCase.adjustSingle(request.toDto(skuId))
 
         return ApiResponse.success()
@@ -48,10 +45,7 @@ class InventoryStockController(
         description = "SKU ID로 재고를 추가합니다.",
     )
     @PostMapping("/add/{skuId}")
-    fun addInventory(
-        @PathVariable skuId: String,
-        @RequestBody request: AddStockRequest
-    ): ApiResponse<Any> {
+    fun addInventory(@PathVariable skuId: String, @RequestBody request: AddStockRequest): ApiResponse<Any> {
         addStockUseCase.addSingle(request.toDto(skuId))
 
         return ApiResponse.success()
@@ -59,7 +53,7 @@ class InventoryStockController(
 
     @Operation(
         summary = "대량 재고 추가",
-        description = "여러 SKU ID로 재고를 대량 추가합니다."
+        description = "여러 SKU ID로 재고를 대량 추가합니다.",
     )
     @PostMapping("/add")
     fun addBulkInventories(@RequestBody request: BulkAddStockRequest): ApiResponse<Any> {
@@ -70,13 +64,10 @@ class InventoryStockController(
 
     @Operation(
         summary = "재고 감소",
-        description = "SKU ID로 재고를 감소합니다."
+        description = "SKU ID로 재고를 감소합니다.",
     )
     @PostMapping("/remove/{skuId}")
-    fun reduceInventory(
-        @PathVariable skuId: String,
-        @RequestBody request: ReduceStockRequest
-    ): ApiResponse<Any> {
+    fun reduceInventory(@PathVariable skuId: String, @RequestBody request: ReduceStockRequest): ApiResponse<Any> {
         reduceStockUseCase.reduceSingle(request.toDto(skuId))
 
         return ApiResponse.success()
@@ -84,7 +75,7 @@ class InventoryStockController(
 
     @Operation(
         summary = "대량 재고 감소",
-        description = "SKU ID로 재고를 대량으로 감소합니다."
+        description = "SKU ID로 재고를 대량으로 감소합니다.",
     )
     @PostMapping("/remove")
     fun reduceBulkInventories(@RequestBody request: BulkReduceStockRequest): ApiResponse<Any> {

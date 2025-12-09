@@ -8,9 +8,7 @@ import com.koosco.inventoryservice.common.InventoryErrorCode
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
-class ReduceStockUseCase(
-    private val inventoryRepository: InventoryRepository,
-) {
+class ReduceStockUseCase(private val inventoryRepository: InventoryRepository) {
 
     @Transactional
     fun reduceSingle(dto: ReduceStockDto) {
