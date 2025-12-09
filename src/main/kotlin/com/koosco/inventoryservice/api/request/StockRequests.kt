@@ -9,8 +9,7 @@ import com.koosco.inventoryservice.application.dto.ReduceStockDto
  */
 data class AdjustStockRequest(val quantity: Int)
 
-fun AdjustStockRequest.toDto(skuId: String): AdjustStockDto =
-    AdjustStockDto(skuId = skuId, quantity = quantity)
+fun AdjustStockRequest.toDto(skuId: String): AdjustStockDto = AdjustStockDto(skuId = skuId, quantity = quantity)
 
 /**
  * 대량 재고 수량 조정 요청 DTO
@@ -26,8 +25,7 @@ fun BulkAdjustStock.toDto(): AdjustStockDto = AdjustStockDto(skuId = skuId, quan
  */
 data class AddStockRequest(val addingQuantity: Int)
 
-fun AddStockRequest.toDto(skuId: String) =
-    AddStockDto(skuId = skuId, addingQuantity = addingQuantity)
+fun AddStockRequest.toDto(skuId: String) = AddStockDto(skuId = skuId, addingQuantity = addingQuantity)
 
 /**
  * 대량 재고 추가 요청 DTO
@@ -43,8 +41,7 @@ fun BulkAddStock.toDto(): AddStockDto = AddStockDto(skuId = skuId, addingQuantit
  */
 data class ReduceStockRequest(val reducingQuantity: Int)
 
-fun ReduceStockRequest.toDto(skuId: String) =
-    ReduceStockDto(skuId = skuId, reducingQuantity = reducingQuantity)
+fun ReduceStockRequest.toDto(skuId: String) = ReduceStockDto(skuId = skuId, reducingQuantity = reducingQuantity)
 
 /**
  * 대량 재고 감소 요청 DTO
@@ -53,5 +50,4 @@ data class BulkReduceStockRequest(val items: List<BulkReduceStock>)
 
 data class BulkReduceStock(val skuId: String, val quantity: Int)
 
-fun BulkReduceStock.toDto(): ReduceStockDto =
-    ReduceStockDto(skuId = skuId, reducingQuantity = quantity)
+fun BulkReduceStock.toDto(): ReduceStockDto = ReduceStockDto(skuId = skuId, reducingQuantity = quantity)

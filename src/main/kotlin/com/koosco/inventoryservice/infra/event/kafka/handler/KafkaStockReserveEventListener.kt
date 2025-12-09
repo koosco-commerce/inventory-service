@@ -19,13 +19,14 @@ import org.springframework.validation.annotation.Validated
 @Component
 @Validated
 class KafkaStockReserveEventListener(private val reserveStockUseCase: ReserveStockUseCase) {
+
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
      * 재고 예약 요청 이벤트 리스너
      */
     @KafkaListener(
-        topics = ["stock.reserve.requested"],
+        topics = ["\${kafka.topics.stock-reserve}"],
         groupId = "inventory-service",
     )
     fun onStockReserveRequested(@Valid event: CloudEvent<StockReserveEvent>, ack: Acknowledgment) {
@@ -49,7 +50,7 @@ class KafkaStockReserveEventListener(private val reserveStockUseCase: ReserveSto
      * 재고 예약 확정 이벤트 리스너 (결제 성공)
      */
     @KafkaListener(
-        topics = ["stock.reserve.confirmed"],
+        topics = ["\${kafka.topics.stock-confirm}"],
         groupId = "inventory-service",
     )
     fun onStockReserveConfirmed(@Valid event: CloudEvent<StockReserveConfirmEvent>, ack: Acknowledgment) {
@@ -73,7 +74,7 @@ class KafkaStockReserveEventListener(private val reserveStockUseCase: ReserveSto
      * 재고 예약 취소 이벤트 리스너 (결제 실패/주문 취소)
      */
     @KafkaListener(
-        topics = ["stock.reserve.cancelled"],
+        topics = ["\${kafka.topics.stock-cancel}"],
         groupId = "inventory-service",
     )
     fun onStockReserveCancelled(@Valid event: CloudEvent<StockReserveCancelEvent>, ack: Acknowledgment) {

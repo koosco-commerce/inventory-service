@@ -1,3 +1,5 @@
+server:
+  port: 8083
 spring:
   datasource:
     url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:commerce-inventory}
@@ -25,15 +27,6 @@ spring:
         dialect: org.hibernate.dialect.MariaDBDialect
         show_sql: true
         format_sql: true
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
-    producer:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
-    consumer:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
-      group-id: inventory-service
-      auto-offset-reset: earliest
-      enable-auto-commit: false
 
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTWhichShouldBeAtLeast256BitsLongToEnsureSecurityAndCompliance}

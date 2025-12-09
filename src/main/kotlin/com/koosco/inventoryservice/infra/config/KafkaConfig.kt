@@ -23,21 +23,21 @@ class KafkaConfig(private val kafkaProperties: KafkaProperties) {
 
     @Bean
     fun consumerFactory(): ConsumerFactory<String, CloudEvent<*>> {
-        val props = mutableMapOf<String, Any>(
-            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to kafkaProperties.bootstrapServers,
-            ConsumerConfig.GROUP_ID_CONFIG to "inventory-service",
-            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
-            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-            ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG to
-                "org.apache.kafka.clients.consumer.CooperativeStickyAssignor",
-        )
+        val props = kafkaProperties.buildConsumerProperties(null).toMutableMap()
+
+        props[ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG] =
+            "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+
+        // JsonDeserializer를 명시적 타입과 함께 생성
+        val jsonDeserializer = JsonDeserializer(CloudEvent::class.java).apply {
+            addTrustedPackages("*")
+            setUseTypeHeaders(false)
+        }
 
         return DefaultKafkaConsumerFactory(
             props,
             StringDeserializer(),
-            JsonDeserializer(CloudEvent::class.java).apply {
-                addTrustedPackages("*")
-            },
+            jsonDeserializer,
         )
     }
 
@@ -53,14 +53,11 @@ class KafkaConfig(private val kafkaProperties: KafkaProperties) {
 
     @Bean
     fun inventoryRebalanceListener(): ConsumerAwareRebalanceListener = object : ConsumerAwareRebalanceListener {
-
         override fun onPartitionsRevokedBeforeCommit(
             consumer: Consumer<*, *>,
             partitions: Collection<TopicPartition>,
         ) {
             log.warn("⚠️ Rebalance 시작 - 파티션 revoke 전: {}", partitions)
-
-            // 현재까지 처리된 offset 커밋
             try {
                 consumer.commitSync()
                 log.info("✅ Offset 커밋 완료 before revoke")
@@ -75,7 +72,6 @@ class KafkaConfig(private val kafkaProperties: KafkaProperties) {
 
         override fun onPartitionsAssigned(consumer: Consumer<*, *>, partitions: Collection<TopicPartition>) {
             log.info("📈 새 파티션 할당됨: {}", partitions)
-
             partitions.forEach { partition ->
                 val position = consumer.position(partition)
                 log.info("  → {}: offset={}", partition, position)

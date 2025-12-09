@@ -1,14 +1,25 @@
 services:
-  db:
-    image: mariadb:11.8.5
-    container_name: inventory-mariadb
+  app:
+    image: inventory-service:latest
+    container_name: inventory-service
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: commerce-inventory
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: admin1234
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/commerce-inventory
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin1234
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092
     ports:
-      - "3306:3306"
-    volumes:
-      - ./inventory_mariadb_data:/var/lib/mysql
+      - "8083:8083"
+    networks:
+      - commerce-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/actuator/health/liveness"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+
+networks:
+  commerce-net:
+    external: true
