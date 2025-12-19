@@ -1,5 +1,6 @@
 package com.koosco.inventoryservice.application.usecase
 
+import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.BadRequestException
 import com.koosco.inventoryservice.application.dto.StockInitDto
 import com.koosco.inventoryservice.application.repository.InventoryRepository
@@ -7,14 +8,13 @@ import com.koosco.inventoryservice.common.InventoryErrorCode
 import com.koosco.inventoryservice.domain.entity.Inventory
 import com.koosco.inventoryservice.domain.vo.Stock
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
  * 재고 초기화 유스케이스
  * 새로운 상품이 생성되었을 때 재고를 초기화합니다.
  */
-@Service
+@UseCase
 class InitializeStockUseCase(private val inventoryRepository: InventoryRepository) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
