@@ -35,12 +35,20 @@ management:
     readinessState:
       enabled: true
 
-kafka:
-  topics:
-    sku-created: koosco.commerce.sku.created
-    stock-reserve: koosco.commerce.stock.reserve
-    stock-confirm: koosco.commerce.stock.confirm
-    stock-cancel: koosco.commerce.stock.cancel
+inventory:
+  topic:
+    domain:
+      default: inventory-domain-events
+      mappings:
+        StockReserved: koosco.commerce.stock.reserved
+        StockReservationConfirmed: koosco.commerce.stock.confirmed
+        StockReservationCanceled: koosco.commerce.stock.canceled
+
+    integration:
+      default: koosco.commerce.integration.inventory
+      mappings:
+        "stock.failed": koosco.commerce.stock.failed
+
 
 springdoc:
   swagger-ui:
