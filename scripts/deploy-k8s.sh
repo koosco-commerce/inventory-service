@@ -32,7 +32,7 @@ EC2_USER=${EC2_USER:-"ubuntu"}
 EC2_KEY=${EC2_KEY:-"~/.ssh/id_rsa"}
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}inventory Service Deployment${NC}"
+echo -e "${GREEN}Inventory Service Deployment${NC}"
 echo -e "${GREEN}Environment: ${ENVIRONMENT}${NC}"
 echo -e "${GREEN}Image: ${IMAGE_NAME}:${IMAGE_TAG}${NC}"
 echo -e "${GREEN}========================================${NC}"
@@ -68,12 +68,16 @@ case ${ENVIRONMENT} in
         echo "  Token: ${GH_TOKEN:0:4}****"
         echo ""
 
+        # Gradle로 jar 빌드
+        echo "Building jar file with Gradle..."
+        cd ${PROJECT_DIR}
+        ./gradlew bootJar
+        echo -e "${GREEN}✓${NC} Jar built successfully"
+        echo ""
+
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build \
-          --build-arg GH_USER=${GH_USER} \
-          --build-arg GH_TOKEN=${GH_TOKEN} \
-          -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 
@@ -154,12 +158,16 @@ case ${ENVIRONMENT} in
         echo "Target k3d cluster: ${CLUSTER_NAME}"
         echo ""
 
+        # Gradle로 jar 빌드
+        echo "Building jar file with Gradle..."
+        cd ${PROJECT_DIR}
+        ./gradlew bootJar
+        echo -e "${GREEN}✓${NC} Jar built successfully"
+        echo ""
+
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build \
-          --build-arg GH_USER=${GH_USER} \
-          --build-arg GH_TOKEN=${GH_TOKEN} \
-          -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 
@@ -224,12 +232,16 @@ case ${ENVIRONMENT} in
         echo -e "${GREEN}✓${NC} SSH connection successful"
         echo ""
 
+        # Gradle로 jar 빌드
+        echo "Building jar file with Gradle..."
+        cd ${PROJECT_DIR}
+        ./gradlew bootJar
+        echo -e "${GREEN}✓${NC} Jar built successfully"
+        echo ""
+
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build \
-          --build-arg GH_USER=${GH_USER} \
-          --build-arg GH_TOKEN=${GH_TOKEN} \
-          -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 

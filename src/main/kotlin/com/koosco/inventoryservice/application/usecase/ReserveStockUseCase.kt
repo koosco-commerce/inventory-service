@@ -1,5 +1,6 @@
 package com.koosco.inventoryservice.application.usecase
 
+import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.NotFoundException
 import com.koosco.inventoryservice.application.dto.StockReserveCancelDto
 import com.koosco.inventoryservice.application.dto.StockReserveConfirmDto
@@ -7,10 +8,9 @@ import com.koosco.inventoryservice.application.dto.StockReserveRequestDto
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import com.koosco.inventoryservice.common.InventoryErrorCode
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-@Service
+@UseCase
 class ReserveStockUseCase(private val inventoryRepository: InventoryRepository) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
