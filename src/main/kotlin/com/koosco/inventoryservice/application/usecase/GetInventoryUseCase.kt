@@ -1,8 +1,8 @@
 package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
-import com.koosco.inventoryservice.application.dto.GetInventoriesDto
-import com.koosco.inventoryservice.application.dto.GetInventoryDto
+import com.koosco.inventoryservice.application.dto.GetInventoriesCommand
+import com.koosco.inventoryservice.application.dto.GetInventoryCommand
 import com.koosco.inventoryservice.application.dto.InventoryDto
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import org.springframework.transaction.annotation.Transactional
@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional
 class GetInventoryUseCase(private val inventoryRepository: InventoryRepository) {
 
     @Transactional(readOnly = true)
-    fun getInventoryBySkuId(dto: GetInventoryDto): InventoryDto {
+    fun getInventoryBySkuId(command: GetInventoryCommand): InventoryDto {
         val inventory = (
-            inventoryRepository.findBySkuIdOrNull(dto.skuId)
-                ?: throw IllegalArgumentException("Inventory with SKU ID ${dto.skuId} not found")
+            inventoryRepository.findBySkuIdOrNull(command.skuId)
+                ?: throw IllegalArgumentException("Inventory with SKU ID ${command.skuId} not found")
             )
 
         return InventoryDto(
@@ -26,8 +26,8 @@ class GetInventoryUseCase(private val inventoryRepository: InventoryRepository) 
     }
 
     @Transactional(readOnly = true)
-    fun getInventoriesBySkuIds(dto: GetInventoriesDto): List<InventoryDto> {
-        val inventories = inventoryRepository.findAllBySkuIdIn(dto.skuIds)
+    fun getInventoriesBySkuIds(command: GetInventoriesCommand): List<InventoryDto> {
+        val inventories = inventoryRepository.findAllBySkuIdIn(command.skuIds)
 
         return inventories.map {
             InventoryDto(

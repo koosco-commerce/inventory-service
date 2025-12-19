@@ -2,7 +2,7 @@ package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.NotFoundException
-import com.koosco.inventoryservice.application.dto.ReduceStockDto
+import com.koosco.inventoryservice.application.dto.ReduceStockCommand
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import com.koosco.inventoryservice.common.InventoryErrorCode
 import org.springframework.transaction.annotation.Transactional
@@ -11,20 +11,20 @@ import org.springframework.transaction.annotation.Transactional
 class ReduceStockUseCase(private val inventoryRepository: InventoryRepository) {
 
     @Transactional
-    fun reduceSingle(dto: ReduceStockDto) {
-        val inventory = inventoryRepository.findBySkuIdOrNull(dto.skuId)
+    fun reduceSingle(command: ReduceStockCommand) {
+        val inventory = inventoryRepository.findBySkuIdOrNull(command.skuId)
             ?: throw NotFoundException(
                 InventoryErrorCode.INVENTORY_NOT_FOUND,
-                "해당하는 재고를 찾을 수 없습니다. skuId: ${dto.skuId}",
+                "해당하는 재고를 찾을 수 없습니다. skuId: ${command.skuId}",
             )
 
-        inventory.decrease(dto.reducingQuantity)
+        inventory.decrease(command.reducingQuantity)
     }
 
     @Transactional
-    fun reduceBulk(dtos: List<ReduceStockDto>) {
+    fun reduceBulk(commands: List<ReduceStockCommand>) {
         // 1. 모든 SKU ID 수집
-        val skuIds = dtos.map { it.skuId }
+        val skuIds = commands.map { it.skuId }
 
         // 2. 한 번의 쿼리로 모든 Inventory 조회
         val inventories = inventoryRepository.findAllBySkuIdIn(skuIds)
@@ -40,9 +40,9 @@ class ReduceStockUseCase(private val inventoryRepository: InventoryRepository) {
         }
 
         // 4. 모든 SKU가 존재하면 처리
-        dtos.forEach { dto ->
-            val inventory = inventoryMap[dto.skuId]!! // 사전 검증으로 null일 수 없음
-            inventory.increase(dto.reducingQuantity)
+        commands.forEach { command ->
+            val inventory = inventoryMap[command.skuId]!! // 사전 검증으로 null일 수 없음
+            inventory.increase(command.reducingQuantity)
         }
     }
 }

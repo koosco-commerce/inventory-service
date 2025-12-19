@@ -5,7 +5,7 @@ import com.koosco.inventoryservice.api.request.GetInventoriesRequest
 import com.koosco.inventoryservice.api.request.toDto
 import com.koosco.inventoryservice.api.response.GetInventoriesResponse
 import com.koosco.inventoryservice.api.response.GetInventoryResponse
-import com.koosco.inventoryservice.application.dto.GetInventoryDto
+import com.koosco.inventoryservice.application.dto.GetInventoryCommand
 import com.koosco.inventoryservice.application.usecase.GetInventoryUseCase
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.web.bind.annotation.*
@@ -20,7 +20,7 @@ class QueryInventoryController(private val getInventoryUseCase: GetInventoryUseC
     )
     @GetMapping("/{skuId}")
     fun getInventoryBySkuId(@PathVariable skuId: String): ApiResponse<GetInventoryResponse> {
-        val dto = getInventoryUseCase.getInventoryBySkuId(GetInventoryDto(skuId = skuId))
+        val dto = getInventoryUseCase.getInventoryBySkuId(GetInventoryCommand(skuId = skuId))
 
         return ApiResponse.success(GetInventoryResponse.toResponse(dto))
     }
