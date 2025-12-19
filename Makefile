@@ -1,4 +1,8 @@
-.PHONY: help format build test clean docker-build docker-clean deploy-local deploy-dev deploy-prod validate k8s-status k8s-logs k8s-clean gradle-build gradle-clean
+.PHONY: help jar build test clean docker-build docker-clean \
+        gradle-build gradle-test gradle-clean \
+        deploy-local deploy-dev deploy-prod validate \
+        k8s-status k8s-describe k8s-stop k8s-start k8s-scale k8s-clean \
+        flyway-history flyway-history-local flyway-clean flyway-clean-local flyway-reset flyway-reset-local
 
 # Default target
 .DEFAULT_GOAL := help
@@ -10,7 +14,7 @@ RED    := \033[0;31m
 NC     := \033[0m
 
 help: ## Show this help message
-	@echo "$(GREEN)inventory Service - Available Commands$(NC)"
+	@echo "$(GREEN)Inventory Service - Available Commands$(NC)"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
@@ -18,18 +22,10 @@ help: ## Show this help message
 	@echo "  GH_USER    - GitHub username (required for build)"
 	@echo "  GH_TOKEN   - GitHub token (required for build)"
 	@echo ""
-	@echo "$(GREEN)Examples:$(NC)"
-	@echo "  make test               # Local build and test"
-	@echo "  make deploy-local       # Deploy to local K8s"
-	@echo "  make k8s-logs           # View application logs"
-	@echo ""
 
 # ============================================
 # Local Development
 # ============================================
-
-format: ## Format code with Spotless
-	@./gradlew spotlessApply
 
 test: ## Build and test locally with Docker
 	@./scripts/test-local.sh
@@ -40,21 +36,21 @@ clean: ## Clean up local containers and data
 	@docker-compose down -v
 	@echo "$(GREEN)✓ Cleanup complete$(NC)"
 
-docker-build: ## Build Docker image only
+jar: ## Build jar file with Gradle
+	@echo "$(YELLOW)Building jar file...$(NC)"
+	@./gradlew bootJar
+	@echo "$(GREEN)✓ Jar file built$(NC)"
+
+build: jar ## Build jar and Docker image
 	@echo "$(YELLOW)Building Docker image...$(NC)"
-	@docker build \
-		--build-arg GH_USER=${GH_USER} \
-		--build-arg GH_TOKEN=${GH_TOKEN} \
-		-t inventory-service:latest .
+	@docker build -t inventory-service:latest .
 	@echo "$(GREEN)✓ Image built: inventory-service:latest$(NC)"
+
+docker-build: build ## Alias for build (deprecated, use 'make build')
 
 docker-clean: ## Remove Docker image
 	@docker rmi inventory-service:latest 2>/dev/null || true
 	@echo "$(GREEN)✓ Docker image removed$(NC)"
-
-docker-down: db-down ## Stop and remove local Docker containers
-	@docker rm -f inventory-service-test 2>/dev/null || true
-	@echo "$(GREEN)✓ Local Docker containers removed$(NC)"
 
 # ============================================
 # Gradle
@@ -90,33 +86,29 @@ validate: ## Validate Kubernetes configurations
 # ============================================
 
 k8s-status: ## Show Kubernetes resources status
-	@echo "$(GREEN)Pods:$(NC)"
+	@echo "$(GREEN)Application Pods:$(NC)"
 	@kubectl get pods -n commerce -l app=inventory-service
 	@echo ""
+	@echo "$(GREEN)MariaDB Pods:$(NC)"
+	@kubectl get pods -n commerce -l app=inventory-service-mariadb
+	@echo ""
 	@echo "$(GREEN)Services:$(NC)"
-	@kubectl get svc -n commerce -l app=inventory-service
+	@kubectl get svc -n commerce -l service=inventory-service
 	@echo ""
 	@echo "$(GREEN)HPA:$(NC)"
 	@kubectl get hpa -n commerce -l app=inventory-service
 	@echo ""
-	@echo "$(GREEN)Deployments:$(NC)"
+	@echo "$(GREEN)Application Deployments:$(NC)"
 	@kubectl get deployments -n commerce -l app=inventory-service
-
-k8s-logs: ## Show application logs
-	@kubectl logs -f deployment/inventory-service -n commerce
-
-k8s-logs-db: ## Show MariaDB logs
-	@kubectl logs -f deployment/inventory-service-mariadb -n commerce
+	@echo ""
+	@echo "$(GREEN)MariaDB Deployments:$(NC)"
+	@kubectl get deployments -n commerce -l app=inventory-service-mariadb
+	@echo ""
+	@echo "$(GREEN)PVC (Persistent Volume Claims):$(NC)"
+	@kubectl get pvc -n commerce -l app=inventory-service-mariadb
 
 k8s-describe: ## Describe pod (for debugging)
 	@kubectl describe pod -n commerce -l app=inventory-service
-
-k8s-shell: ## Open shell in application pod
-	@kubectl exec -it deployment/inventory-service -n commerce -- /bin/sh
-
-k8s-restart: ## Restart application deployment
-	@kubectl rollout restart deployment/inventory-service -n commerce
-	@echo "$(GREEN)✓ Deployment restarted$(NC)"
 
 k8s-stop: ## Stop application (scale to 0)
 	@echo "$(YELLOW)Stopping application (scaling to 0)...$(NC)"
@@ -147,78 +139,33 @@ k8s-clean: ## Delete all Kubernetes resources
 	@echo "$(GREEN)✓ Resources deleted$(NC)"
 
 # ============================================
-# Port Forwarding
-# ============================================
-
-port-forward: ## Forward application port to localhost:8080
-	@echo "$(GREEN)Forwarding port 8083...$(NC)"
-	@echo "Access at: http://localhost:8083"
-	@kubectl port-forward svc/inventory-service 8083:80 -n commerce
-
-port-forward-db: ## Forward MariaDB port to localhost:3306
-	@echo "$(GREEN)Forwarding MariaDB port 3309...$(NC)"
-	@kubectl port-forward svc/inventory-service-mariadb 3309:3306 -n commerce
-
-# ============================================
-# Health Checks
-# ============================================
-
-health: ## Check application health (requires port-forward)
-	@curl -s http://localhost:8080/actuator/health | jq
-
-health-liveness: ## Check liveness probe
-	@curl -s http://localhost:8080/actuator/health/liveness | jq
-
-health-readiness: ## Check readiness probe
-	@curl -s http://localhost:8080/actuator/health/readiness | jq
-
-# ============================================
-# Database
-# ============================================
-
-db-up: ## Start local MariaDB
-	@docker-compose up -d db
-	@echo "$(GREEN)✓ MariaDB started$(NC)"
-
-db-down: ## Stop local MariaDB
-	@docker-compose down
-	@echo "$(GREEN)✓ MariaDB stopped$(NC)"
-
-db-logs: ## Show MariaDB logs
-	@docker-compose logs -f db
-
-db-shell: ## Connect to local MariaDB shell
-	@docker exec -it inventory-mariadb mysql -uadmin -padmin1234 commerce-inventory
-
-
-# ============================================
 # Flyway Management
 # ============================================
 
 flyway-history: ## Show Flyway migration history (K8s)
 	@echo "$(GREEN)Flyway Migration History:$(NC)"
 	@kubectl exec deployment/inventory-service-mariadb -n commerce -- \
-		mariadb -uadmin -padmin1234 commerce-inventory \
+		mariadb -uadmin -padmin1234 commerce-auth \
 		-e "SELECT installed_rank, version, description, type, installed_on, execution_time, success FROM flyway_schema_history;" \
 		2>/dev/null || echo "$(RED)Error: Cannot connect to MariaDB$(NC)"
 
 flyway-history-local: ## Show Flyway migration history (Local)
 	@echo "$(GREEN)Flyway Migration History:$(NC)"
-	@docker exec inventory-mariadb mariadb -uadmin -padmin1234 commerce-inventory \
+	@docker exec auth-mariadb mariadb -uadmin -padmin1234 commerce-auth \
 		-e "SELECT installed_rank, version, description, type, installed_on, execution_time, success FROM flyway_schema_history;" \
 		2>/dev/null || echo "$(RED)Error: Cannot connect to local MariaDB$(NC)"
 
 flyway-clean: ## Clean failed Flyway migrations (K8s)
 	@echo "$(YELLOW)Cleaning failed Flyway migrations...$(NC)"
 	@kubectl exec deployment/inventory-service-mariadb -n commerce -- \
-		mariadb -uadmin -padmin1234 commerce-inventory \
+		mariadb -uadmin -padmin1234 commerce-auth \
 		-e "DELETE FROM flyway_schema_history WHERE success = 0;" \
 		2>/dev/null && echo "$(GREEN)✓ Failed migrations removed$(NC)" \
 		|| echo "$(RED)Error: Cannot clean migrations$(NC)"
 
 flyway-clean-local: ## Clean failed Flyway migrations (Local)
 	@echo "$(YELLOW)Cleaning failed Flyway migrations...$(NC)"
-	@docker exec inventory-mariadb mariadb -uadmin -padmin1234 commerce-inventory \
+	@docker exec auth-mariadb mariadb -uadmin -padmin1234 commerce-auth \
 		-e "DELETE FROM flyway_schema_history WHERE success = 0;" \
 		2>/dev/null && echo "$(GREEN)✓ Failed migrations removed$(NC)" \
 		|| echo "$(RED)Error: Cannot clean migrations$(NC)"
@@ -228,7 +175,7 @@ flyway-reset: ## Reset Flyway history completely (K8s) - DANGEROUS!
 	@echo "$(YELLOW)Press Ctrl+C to cancel, or Enter to continue...$(NC)"
 	@read confirm
 	@kubectl exec deployment/inventory-service-mariadb -n commerce -- \
-		mariadb -uadmin -padmin1234 commerce-inventory \
+		mariadb -uadmin -padmin1234 commerce-auth \
 		-e "DROP TABLE IF EXISTS flyway_schema_history;" \
 		2>/dev/null && echo "$(GREEN)✓ Flyway history reset$(NC)" \
 		|| echo "$(RED)Error: Cannot reset Flyway$(NC)"
@@ -237,17 +184,7 @@ flyway-reset-local: ## Reset Flyway history completely (Local) - DANGEROUS!
 	@echo "$(RED)WARNING: This will delete ALL Flyway history!$(NC)"
 	@echo "$(YELLOW)Press Ctrl+C to cancel, or Enter to continue...$(NC)"
 	@read confirm
-	@docker exec inventory-mariadb mariadb -uadmin -padmin1234 commerce-inventory \
+	@docker exec auth-mariadb mariadb -uadmin -padmin1234 commerce-auth \
 		-e "DROP TABLE IF EXISTS flyway_schema_history;" \
 		2>/dev/null && echo "$(GREEN)✓ Flyway history reset$(NC)" \
 		|| echo "$(RED)Error: Cannot reset Flyway$(NC)"
-
-# ============================================
-# Quick Commands
-# ============================================
-
-dev: clean test ## Clean and test (quick dev workflow)
-
-redeploy: k8s-clean deploy-local ## Clean and redeploy to local K8s
-
-check: k8s-status k8s-logs ## Check deployment status and logs
