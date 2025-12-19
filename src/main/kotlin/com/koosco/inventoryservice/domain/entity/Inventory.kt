@@ -1,5 +1,9 @@
 package com.koosco.inventoryservice.domain.entity
 
+import com.koosco.common.core.event.DomainEvent
+import com.koosco.inventoryservice.domain.event.StockReservationCanceled
+import com.koosco.inventoryservice.domain.event.StockReservationConfirmed
+import com.koosco.inventoryservice.domain.event.StockReserved
 import com.koosco.inventoryservice.domain.vo.Stock
 import jakarta.persistence.*
 import java.time.LocalDateTime
@@ -23,12 +27,17 @@ class Inventory(
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now(),
+
+    @Transient
+    val domainEvents: MutableList<DomainEvent> = mutableListOf(),
 ) {
 
     @PreUpdate
     fun onUpdate() {
         this.updatedAt = LocalDateTime.now()
     }
+
+    fun pullDomainEvents(): List<DomainEvent> = domainEvents.toList().also { domainEvents.clear() }
 
     fun updateStock(quantity: Int) {
         stock = Stock(quantity, this.stock.reserved)
@@ -47,15 +56,36 @@ class Inventory(
     /** 재고 예약 (주문 생성 시) */
     fun reserve(quantity: Int) {
         stock = stock.reserve(quantity)
+
+        domainEvents.add(
+            StockReserved(
+                skuId = this.skuId,
+                quantity = quantity,
+            ),
+        )
     }
 
     /** 예약 재고 확정 (결제 성공 시) */
     fun confirm(quantity: Int) {
         stock = stock.confirm(quantity)
+
+        domainEvents.add(
+            StockReservationConfirmed(
+                skuId = this.skuId,
+                quantity = quantity,
+            ),
+        )
     }
 
     /** 예약 취소 (결제 실패/주문 취소) */
     fun cancelReservation(quantity: Int) {
         stock = stock.cancelReservation(quantity)
+
+        domainEvents.add(
+            StockReservationCanceled(
+                skuId = this.skuId,
+                quantity = quantity,
+            ),
+        )
     }
 }
