@@ -72,10 +72,10 @@ dependencies {
 
     // monitoring
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
     // swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.1")
-    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
     // test
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
