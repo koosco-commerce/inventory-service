@@ -1,7 +1,7 @@
 package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
-import com.koosco.inventoryservice.application.dto.AdjustStockCommand
+import com.koosco.inventoryservice.application.command.AdjustStockCommand
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import org.springframework.transaction.annotation.Transactional
 

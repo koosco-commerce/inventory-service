@@ -1,7 +1,7 @@
 package com.koosco.inventoryservice.infra.event.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.inventoryservice.application.command.StockInitCommand
+import com.koosco.inventoryservice.application.command.InitStockCommand
 import com.koosco.inventoryservice.application.event.DomainEventPublisher
 import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
 import com.koosco.inventoryservice.application.usecase.InitializeStockUseCase
@@ -51,7 +51,7 @@ class KafkaProductSkuCreatedEventListener(
         try {
             // 재고 초기화
             initializeStockUseCase.initialize(
-                StockInitCommand(
+                InitStockCommand(
                     data.skuId,
                     data.initialQuantity,
                 ),

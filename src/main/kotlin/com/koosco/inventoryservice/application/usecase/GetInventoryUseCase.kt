@@ -1,8 +1,8 @@
 package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
-import com.koosco.inventoryservice.application.dto.GetInventoriesCommand
-import com.koosco.inventoryservice.application.dto.GetInventoryCommand
+import com.koosco.inventoryservice.application.command.GetInventoriesCommand
+import com.koosco.inventoryservice.application.command.GetInventoryCommand
 import com.koosco.inventoryservice.application.dto.InventoryDto
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import org.springframework.transaction.annotation.Transactional

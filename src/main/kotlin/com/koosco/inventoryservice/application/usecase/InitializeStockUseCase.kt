@@ -2,7 +2,7 @@ package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.BadRequestException
-import com.koosco.inventoryservice.application.command.StockInitCommand
+import com.koosco.inventoryservice.application.command.InitStockCommand
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import com.koosco.inventoryservice.domain.entity.Inventory
 import com.koosco.inventoryservice.domain.exception.InventoryAlreadyInitialized
@@ -25,7 +25,7 @@ class InitializeStockUseCase(private val inventoryRepository: InventoryRepositor
      * @throws BadRequestException 이미 재고가 존재하는 경우 또는 초기 수량이 유효하지 않은 경우
      */
     @Transactional
-    fun initialize(command: StockInitCommand) {
+    fun initialize(command: InitStockCommand) {
         // 이미 재고가 존재하는지 확인
         if (inventoryRepository.existsBySkuId(command.skuId)) {
             logger.warn("Inventory already exists for skuId: ${command.skuId}")

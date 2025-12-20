@@ -1,7 +1,7 @@
 package com.koosco.inventoryservice.infra.event.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.inventoryservice.application.command.StockReserveCommand
+import com.koosco.inventoryservice.application.command.ReserveStockCommand
 import com.koosco.inventoryservice.application.event.DomainEventPublisher
 import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
 import com.koosco.inventoryservice.application.usecase.ReserveStockUseCase
@@ -47,7 +47,7 @@ class KafkaOrderCreatedEventListener(
 
         try {
             reserveStockUseCase.reserve(
-                StockReserveCommand(
+                ReserveStockCommand(
                     orderId = data.orderId,
                     skuId = data.skuId,
                     quantity = data.reservedAmount,

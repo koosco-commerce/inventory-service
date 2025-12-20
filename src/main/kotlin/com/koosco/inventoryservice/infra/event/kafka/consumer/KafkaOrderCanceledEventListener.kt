@@ -1,7 +1,7 @@
 package com.koosco.inventoryservice.infra.event.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.inventoryservice.application.command.StockCancelCommand
+import com.koosco.inventoryservice.application.command.CancelStockCommand
 import com.koosco.inventoryservice.application.usecase.ReserveStockUseCase
 import com.koosco.inventoryservice.infra.event.kafka.event.OrderCanceled
 import jakarta.validation.Valid
@@ -41,7 +41,7 @@ class KafkaOrderCanceledEventListener(private val reserveStockUseCase: ReserveSt
         try {
             // 재고 취소
             reserveStockUseCase.cancel(
-                StockCancelCommand(
+                CancelStockCommand(
                     orderId = data.orderId,
                     skuId = data.skuId,
                     quantity = data.canceledAmount,

@@ -2,7 +2,7 @@ package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.NotFoundException
-import com.koosco.inventoryservice.application.dto.ReduceStockCommand
+import com.koosco.inventoryservice.application.command.ReduceStockCommand
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import com.koosco.inventoryservice.common.InventoryErrorCode
 import org.springframework.transaction.annotation.Transactional

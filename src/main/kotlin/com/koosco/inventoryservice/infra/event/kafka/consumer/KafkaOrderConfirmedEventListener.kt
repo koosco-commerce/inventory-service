@@ -1,7 +1,7 @@
 package com.koosco.inventoryservice.infra.event.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.inventoryservice.application.command.StockConfirmCommand
+import com.koosco.inventoryservice.application.command.ConfirmStockCommand
 import com.koosco.inventoryservice.application.event.DomainEventPublisher
 import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
 import com.koosco.inventoryservice.application.usecase.ReserveStockUseCase
@@ -49,7 +49,7 @@ class KafkaOrderConfirmedEventListener(
         try {
             // 재고 확정
             reserveStockUseCase.confirm(
-                StockConfirmCommand(
+                ConfirmStockCommand(
                     orderId = data.orderId,
                     skuId = data.skuId,
                     quantity = data.confirmedAmount,
