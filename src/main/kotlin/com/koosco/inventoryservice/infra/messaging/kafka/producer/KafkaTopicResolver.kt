@@ -1,9 +1,9 @@
-package com.koosco.inventoryservice.infra.event.kafka.producer
+package com.koosco.inventoryservice.infra.messaging.kafka.producer
 
 import com.koosco.common.core.event.DomainEvent
-import com.koosco.inventoryservice.infra.event.DomainTopicResolver
-import com.koosco.inventoryservice.infra.event.IntegrationTopicResolver
-import com.koosco.inventoryservice.infra.event.kafka.event.InventoryIntegrationEvent
+import com.koosco.inventoryservice.infra.messaging.DomainTopicResolver
+import com.koosco.inventoryservice.infra.messaging.IntegrationTopicResolver
+import com.koosco.inventoryservice.infra.messaging.kafka.message.InventoryIntegrationEvent
 import org.springframework.stereotype.Component
 
 /**

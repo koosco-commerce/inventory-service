@@ -1,4 +1,4 @@
-package com.koosco.inventoryservice.infra.event.kafka.producer
+package com.koosco.inventoryservice.infra.messaging.kafka.producer
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component

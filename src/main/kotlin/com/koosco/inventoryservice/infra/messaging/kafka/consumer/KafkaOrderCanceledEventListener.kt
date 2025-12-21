@@ -1,9 +1,9 @@
-package com.koosco.inventoryservice.infra.event.kafka.consumer
+package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.inventoryservice.application.command.CancelStockCommand
 import com.koosco.inventoryservice.application.usecase.ReserveStockUseCase
-import com.koosco.inventoryservice.infra.event.kafka.event.OrderCanceled
+import com.koosco.inventoryservice.infra.messaging.kafka.message.OrderCanceled
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener

@@ -1,6 +1,6 @@
-package com.koosco.inventoryservice.infra.event
+package com.koosco.inventoryservice.infra.messaging
 
-import com.koosco.inventoryservice.infra.event.kafka.event.InventoryIntegrationEvent
+import com.koosco.inventoryservice.infra.messaging.kafka.message.InventoryIntegrationEvent
 
 /**
  * fileName       : IntegrationTopicResolver

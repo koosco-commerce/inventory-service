@@ -1,4 +1,4 @@
-package com.koosco.inventoryservice.infra.event
+package com.koosco.inventoryservice.infra.messaging
 
 import com.koosco.common.core.event.DomainEvent
 

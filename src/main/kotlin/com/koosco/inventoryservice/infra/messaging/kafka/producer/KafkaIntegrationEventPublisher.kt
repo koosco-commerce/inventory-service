@@ -1,8 +1,8 @@
-package com.koosco.inventoryservice.infra.event.kafka.producer
+package com.koosco.inventoryservice.infra.messaging.kafka.producer
 
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
-import com.koosco.inventoryservice.infra.event.kafka.event.InventoryIntegrationEvent
+import com.koosco.inventoryservice.infra.messaging.kafka.message.InventoryIntegrationEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate

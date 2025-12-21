@@ -1,4 +1,4 @@
-package com.koosco.inventoryservice.infra.event.kafka.event
+package com.koosco.inventoryservice.infra.messaging.kafka.message
 
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Positive

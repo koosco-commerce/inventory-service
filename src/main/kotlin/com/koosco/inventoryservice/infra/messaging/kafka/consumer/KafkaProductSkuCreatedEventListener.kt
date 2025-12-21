@@ -1,11 +1,11 @@
-package com.koosco.inventoryservice.infra.event.kafka.consumer
+package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.inventoryservice.application.command.InitStockCommand
 import com.koosco.inventoryservice.application.event.DomainEventPublisher
 import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
 import com.koosco.inventoryservice.application.usecase.InitializeStockUseCase
-import com.koosco.inventoryservice.infra.event.kafka.event.ProductSkuCreatedEvent
+import com.koosco.inventoryservice.infra.messaging.kafka.message.ProductSkuCreatedEvent
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
