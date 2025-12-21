@@ -1,4 +1,4 @@
-package com.koosco.inventoryservice.infra.messaging.kafka.producer
+package com.koosco.inventoryservice.infra.messaging.kafka.config
 
 import com.koosco.common.core.event.DomainEvent
 import com.koosco.inventoryservice.infra.messaging.DomainTopicResolver
