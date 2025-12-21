@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Positive
  * Order created
  * → inventory should reserve stock
  */
-data class OrderCreatedEvent(
+data class OrderPlacedEvent(
     @field:NotNull
     val orderId: Long,
 

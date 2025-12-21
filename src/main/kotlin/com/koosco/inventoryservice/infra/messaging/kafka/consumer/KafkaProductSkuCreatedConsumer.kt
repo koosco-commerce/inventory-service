@@ -2,8 +2,6 @@ package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.inventoryservice.application.command.InitStockCommand
-import com.koosco.inventoryservice.application.event.DomainEventPublisher
-import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
 import com.koosco.inventoryservice.application.usecase.InitializeStockUseCase
 import com.koosco.inventoryservice.infra.messaging.kafka.message.ProductSkuCreatedEvent
 import jakarta.validation.Valid
@@ -19,11 +17,7 @@ import org.springframework.validation.annotation.Validated
  */
 @Component
 @Validated
-class KafkaProductSkuCreatedEventListener(
-    private val initializeStockUseCase: InitializeStockUseCase,
-    private val domainEventPublisher: DomainEventPublisher,
-    private val integrationEventPublisher: IntegrationEventPublisher,
-) {
+class KafkaProductSkuCreatedConsumer(private val initializeStockUseCase: InitializeStockUseCase) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
@@ -31,7 +25,7 @@ class KafkaProductSkuCreatedEventListener(
      * 각 SKU가 생성될 때마다 개별적으로 재고를 초기화합니다.
      */
     @KafkaListener(
-        topics = ["\${kafka.topics.sku-created}"],
+        topics = ["\${inventory.topic.integration.mappings.product.sku.created}"],
         groupId = "inventory-service",
     )
     fun onProductSkuCreated(@Valid event: CloudEvent<ProductSkuCreatedEvent>, ack: Acknowledgment) {

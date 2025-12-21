@@ -6,14 +6,19 @@ import com.koosco.inventoryservice.application.command.CancelStockCommand
 import com.koosco.inventoryservice.application.command.ConfirmStockCommand
 import com.koosco.inventoryservice.application.command.ReserveStockCommand
 import com.koosco.inventoryservice.application.event.DomainEventPublisher
+import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
 import com.koosco.inventoryservice.application.repository.InventoryRepository
 import com.koosco.inventoryservice.common.InventoryErrorCode
+import com.koosco.inventoryservice.domain.exception.NotEnoughStockException
+import com.koosco.inventoryservice.infra.messaging.kafka.message.StockConfirmFailedEvent
+import com.koosco.inventoryservice.infra.messaging.kafka.message.StockReservationFailedEvent
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class ReserveStockUseCase(
     private val inventoryRepository: InventoryRepository,
     private val domainEventPublisher: DomainEventPublisher,
+    private val integrationEventPublisher: IntegrationEventPublisher,
 ) {
 
     /**
@@ -21,16 +26,28 @@ class ReserveStockUseCase(
      */
     @Transactional
     fun reserve(command: ReserveStockCommand) {
-        val inventory = inventoryRepository.findBySkuIdOrNull(command.skuId)
-            ?: throw NotFoundException(
-                InventoryErrorCode.INVENTORY_NOT_FOUND,
-                "Inventory not found. skuId=${command.skuId}",
+        try {
+            val inventory = inventoryRepository.findBySkuIdOrNull(command.skuId)
+                ?: throw NotFoundException(
+                    InventoryErrorCode.INVENTORY_NOT_FOUND,
+                    "Inventory not found. skuId=${command.skuId}",
+                )
+
+            inventory.reserve(command.quantity)
+
+            // 재고 예약 성공에 대한 이벤트 발행
+            domainEventPublisher.publishAll(inventory.pullDomainEvents())
+        } catch (e: NotEnoughStockException) {
+            integrationEventPublisher.publish(
+                StockReservationFailedEvent(
+                    orderId = command.orderId,
+                    skuId = command.skuId,
+                    reason = "NOT_ENOUGH_STOCK",
+                ),
             )
 
-        inventory.reserve(command.quantity)
-
-        // 재고 예약 성공에 대한 이벤트 발행
-        domainEventPublisher.publishAll(inventory.pullDomainEvents())
+            throw e
+        }
     }
 
     /**
@@ -38,17 +55,29 @@ class ReserveStockUseCase(
      */
     @Transactional
     fun confirm(command: ConfirmStockCommand) {
-        val inventory = inventoryRepository.findBySkuIdOrNull(command.skuId)
-            ?: throw NotFoundException(
-                InventoryErrorCode.INVENTORY_NOT_FOUND,
-                "Inventory not found. skuId=${command.skuId}",
+        try {
+            val inventory = inventoryRepository.findBySkuIdOrNull(command.skuId)
+                ?: throw NotFoundException(
+                    InventoryErrorCode.INVENTORY_NOT_FOUND,
+                    "Inventory not found. skuId=${command.skuId}",
+                )
+
+            inventory.confirm(command.quantity)
+
+            inventoryRepository.save(inventory)
+
+            domainEventPublisher.publishAll(inventory.pullDomainEvents())
+        } catch (e: NotEnoughStockException) {
+            integrationEventPublisher.publish(
+                StockConfirmFailedEvent(
+                    orderId = command.orderId,
+                    skuId = command.skuId,
+                    reason = "NOT_ENOUGH_STOCK",
+                ),
             )
 
-        inventory.confirm(command.quantity)
-
-        inventoryRepository.save(inventory)
-
-        domainEventPublisher.publishAll(inventory.pullDomainEvents())
+            throw e
+        }
     }
 
     /**

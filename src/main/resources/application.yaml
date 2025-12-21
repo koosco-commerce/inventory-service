@@ -48,6 +48,12 @@ inventory:
       default: koosco.commerce.integration.inventory
       mappings:
         "stock.failed": koosco.commerce.stock.failed
+        order:
+          placed: koosco.commerce.order.placed
+          confirmed: koosco.commerce.order.confirmed
+          canceled: koosco.commerce.order.canceled
+        product:
+          sku.created: koosco.commerce.product.sku.created
 
 
 springdoc:

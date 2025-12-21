@@ -19,11 +19,11 @@ import org.springframework.validation.annotation.Validated
  */
 @Component
 @Validated
-class KafkaOrderCanceledEventListener(private val reserveStockUseCase: ReserveStockUseCase) {
+class KafkaOrderCanceledConsumer(private val reserveStockUseCase: ReserveStockUseCase) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @KafkaListener(
-        topics = ["\${kafka.topics.order-confirmed}"],
+        topics = ["\${inventory.topic.integration.mappings.order.canceled}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
     fun onOrderCanceled(@Valid event: CloudEvent<OrderCanceled>, ack: Acknowledgment) {
@@ -39,7 +39,7 @@ class KafkaOrderCanceledEventListener(private val reserveStockUseCase: ReserveSt
         )
 
         try {
-            // 재고 취소
+            // 재고 예약 취소
             reserveStockUseCase.cancel(
                 CancelStockCommand(
                     orderId = data.orderId,
