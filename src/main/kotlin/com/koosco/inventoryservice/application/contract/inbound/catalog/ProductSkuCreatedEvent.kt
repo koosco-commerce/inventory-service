@@ -1,11 +1,11 @@
-package com.koosco.inventoryservice.infra.messaging.kafka.message
+package com.koosco.inventoryservice.application.contract.inbound.catalog
 
 import java.time.LocalDateTime
 
 /**
- * fileName       : ProductEvents
+ * fileName       : ProductSkuCreatedEvent
  * author         : koo
- * date           : 2025. 12. 19. 오후 3:16
+ * date           : 2025. 12. 24. 오전 2:34
  * description    :
  */
 data class ProductSkuCreatedEvent(

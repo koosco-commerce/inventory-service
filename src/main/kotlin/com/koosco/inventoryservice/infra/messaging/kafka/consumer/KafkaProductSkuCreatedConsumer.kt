@@ -2,8 +2,8 @@ package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.inventoryservice.application.command.InitStockCommand
+import com.koosco.inventoryservice.application.contract.inbound.catalog.ProductSkuCreatedEvent
 import com.koosco.inventoryservice.application.usecase.InitializeStockUseCase
-import com.koosco.inventoryservice.infra.messaging.kafka.message.ProductSkuCreatedEvent
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
@@ -29,7 +29,6 @@ class KafkaProductSkuCreatedConsumer(private val initializeStockUseCase: Initial
         groupId = "inventory-service",
     )
     fun onProductSkuCreated(@Valid event: CloudEvent<ProductSkuCreatedEvent>, ack: Acknowledgment) {
-        // CloudEvent의 data 필드가 LinkedHashMap으로 역직렬화되는 경우 처리
         val data = event.data
             ?: run {
                 logger.error("ProductSkuCreated is null: eventId=${event.id}")
@@ -44,7 +43,7 @@ class KafkaProductSkuCreatedConsumer(private val initializeStockUseCase: Initial
 
         try {
             // 재고 초기화
-            initializeStockUseCase.initialize(
+            initializeStockUseCase.execute(
                 InitStockCommand(
                     data.skuId,
                     data.initialQuantity,

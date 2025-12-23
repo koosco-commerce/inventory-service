@@ -3,7 +3,7 @@ package com.koosco.inventoryservice.application.usecase
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.BadRequestException
 import com.koosco.inventoryservice.application.command.InitStockCommand
-import com.koosco.inventoryservice.application.repository.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepository
 import com.koosco.inventoryservice.domain.entity.Inventory
 import com.koosco.inventoryservice.domain.exception.InventoryAlreadyInitialized
 import com.koosco.inventoryservice.domain.vo.Stock
@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional
  */
 @UseCase
 class InitializeStockUseCase(private val inventoryRepository: InventoryRepository) {
+
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
@@ -25,7 +26,7 @@ class InitializeStockUseCase(private val inventoryRepository: InventoryRepositor
      * @throws BadRequestException 이미 재고가 존재하는 경우 또는 초기 수량이 유효하지 않은 경우
      */
     @Transactional
-    fun initialize(command: InitStockCommand) {
+    fun execute(command: InitStockCommand) {
         // 이미 재고가 존재하는지 확인
         if (inventoryRepository.existsBySkuId(command.skuId)) {
             logger.warn("Inventory already exists for skuId: ${command.skuId}")
@@ -36,7 +37,7 @@ class InitializeStockUseCase(private val inventoryRepository: InventoryRepositor
 
         val newInventory = Inventory(
             skuId = command.skuId,
-            stock = Stock(total = command.quantity),
+            stock = Stock(total = command.initialQuantity),
         )
 
         inventoryRepository.save(newInventory)

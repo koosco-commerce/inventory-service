@@ -2,9 +2,10 @@ package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.inventoryservice.application.command.ReserveStockCommand
+import com.koosco.inventoryservice.application.contract.inbound.order.OrderPlacedEvent
 import com.koosco.inventoryservice.application.usecase.ReserveStockUseCase
+import com.koosco.inventoryservice.common.MessageContext
 import com.koosco.inventoryservice.domain.exception.NotEnoughStockException
-import com.koosco.inventoryservice.infra.messaging.kafka.message.OrderPlacedEvent
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
@@ -12,20 +13,20 @@ import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Component
 
 /**
- * fileName       : KafkaOrderCreatedEventListener
+ * fileName       : KafkaOrderPlacedEventConsumer
  * author         : koo
  * date           : 2025. 12. 19. 오후 12:38
  * description    : OrderCreatedEvent 처리 리스너
  */
 @Component
-class KafkaOrderPlacedConsumer(private val reserveStockUseCase: ReserveStockUseCase) {
+class KafkaOrderPlacedEventConsumer(private val reserveStockUseCase: ReserveStockUseCase) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @KafkaListener(
         topics = ["\${inventory.topic.integration.mappings.order.placed}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
-    fun onOrderCreated(@Valid event: CloudEvent<OrderPlacedEvent>, ack: Acknowledgment) {
+    fun onOrderPlaced(@Valid event: CloudEvent<OrderPlacedEvent>, ack: Acknowledgment) {
         val data = event.data
             ?: run {
                 logger.error("OrderPlacedEvent data is null: eventId=${event.id}")
@@ -34,25 +35,36 @@ class KafkaOrderPlacedConsumer(private val reserveStockUseCase: ReserveStockUseC
             }
 
         logger.info(
-            "Received OrderPlacedEvent: eventId=${event.id}, " +
-                "orderId=${data.orderId}, skuId=${data.skuId}, quantity=${data.reservedAmount}",
+            "Received OrderPlacedEvent: eventId={}, correlationId={}, orderId={}",
+            event.id,
+            data.correlationId,
+            data.orderId,
+        )
+
+        val context = MessageContext(
+            correlationId = data.correlationId,
+            causationId = event.id,
+        )
+
+        val command = ReserveStockCommand(
+            orderId = data.orderId,
+            items = data.items.map { item ->
+                ReserveStockCommand.ReservedSku(
+                    skuId = item.skuId,
+                    quantity = item.quantity,
+                )
+            },
         )
 
         try {
-            reserveStockUseCase.reserve(
-                ReserveStockCommand(
-                    orderId = data.orderId,
-                    skuId = data.skuId,
-                    quantity = data.reservedAmount,
-                ),
-            )
+            reserveStockUseCase.execute(command, context)
 
             ack.acknowledge()
             logger.info(
-                "Successfully reserve stock for ORDER: eventId=${event.id}, orderId=${data.orderId}, " +
-                    "skuId=${data.skuId}, quantity=${data.reservedAmount}",
+                "Successfully reserved stock for ORDER: eventId=${event.id}, orderId=${data.orderId}, items=${data.items}",
             )
-        } catch (e: NotEnoughStockException) {
+        } catch (_: NotEnoughStockException) {
+            // 재고 부족 -> 재시도하지 않음 -> TODO : notification 처리
             logger.warn(
                 "Stock reservation failed: eventId=${event.id}, orderId=${data.orderId}",
             )

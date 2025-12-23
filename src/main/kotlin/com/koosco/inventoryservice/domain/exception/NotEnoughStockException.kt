@@ -8,8 +8,12 @@ import com.koosco.inventoryservice.common.InventoryErrorCode
  * date           : 2025. 12. 19. 오후 1:54
  * description    :
  */
-class NotEnoughStockException(message: String = "Not enough stock available") :
-    BusinessException(
-        InventoryErrorCode.NOT_ENOUGH_STOCK,
-        message,
-    )
+class NotEnoughStockException(
+    message: String = "Not enough stock available",
+    val skuId: String? = null,
+    val requestedQuantity: Int? = null,
+    val availableQuantity: Int? = null,
+) : BusinessException(
+    InventoryErrorCode.NOT_ENOUGH_STOCK,
+    message,
+)

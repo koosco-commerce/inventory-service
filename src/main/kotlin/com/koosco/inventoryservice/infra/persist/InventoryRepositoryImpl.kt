@@ -1,6 +1,6 @@
 package com.koosco.inventoryservice.infra.persist
 
-import com.koosco.inventoryservice.application.repository.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepository
 import com.koosco.inventoryservice.domain.entity.Inventory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
@@ -22,6 +22,9 @@ class InventoryRepositoryImpl(
     override fun findBySkuIdOrNull(skuId: String): Inventory? = jpaInventoryRepository.findByIdOrNull(skuId)
 
     override fun findAllBySkuIdIn(skuIds: List<String>): List<Inventory> = inventoryQuery.findAllBySkuIdIn(skuIds)
+
+    override fun findAllBySkuIdInWithLock(skuIds: List<String>): List<Inventory> =
+        jpaInventoryRepository.findAllBySkuIdInWithLock(skuIds)
 
     override fun existsBySkuId(skuId: String): Boolean = jpaInventoryRepository.existsById(skuId)
 }

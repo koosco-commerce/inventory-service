@@ -55,14 +55,23 @@ class Inventory(
 
     /** 재고 예약 (주문 생성 시) */
     fun reserve(quantity: Int) {
-        stock = stock.reserve(quantity)
+        try {
+            stock = stock.reserve(quantity)
 
-        domainEvents.add(
-            StockReserved(
+            domainEvents.add(
+                StockReserved(
+                    skuId = this.skuId,
+                    quantity = quantity,
+                ),
+            )
+        } catch (e: com.koosco.inventoryservice.domain.exception.NotEnoughStockException) {
+            throw com.koosco.inventoryservice.domain.exception.NotEnoughStockException(
+                message = "Not enough stock for skuId=$skuId: requested=$quantity, available=${stock.available}",
                 skuId = this.skuId,
-                quantity = quantity,
-            ),
-        )
+                requestedQuantity = quantity,
+                availableQuantity = stock.available,
+            )
+        }
     }
 
     /** 예약 재고 확정 (결제 성공 시) */

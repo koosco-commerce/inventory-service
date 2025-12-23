@@ -2,35 +2,36 @@ package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.NotFoundException
-import com.koosco.inventoryservice.application.command.ReserveStockCommand
-import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservationFailedEvent
-import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservedEvent
-import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservedEvent.Item
+import com.koosco.inventoryservice.application.command.ConfirmStockCommand
+import com.koosco.inventoryservice.application.contract.outbound.inventory.StockConfirmFailedEvent
+import com.koosco.inventoryservice.application.contract.outbound.inventory.StockConfirmedEvent
 import com.koosco.inventoryservice.application.port.IntegrationEventPublisher
 import com.koosco.inventoryservice.application.port.InventoryRepository
 import com.koosco.inventoryservice.common.InventoryErrorCode
 import com.koosco.inventoryservice.common.MessageContext
-import com.koosco.inventoryservice.domain.event.StockReserved
 import com.koosco.inventoryservice.domain.exception.NotEnoughStockException
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * fileName       : ReserveStockUseCase
+ * fileName       : ConfirmStockUseCase
  * author         : koo
  * date           : 2025. 12. 22. 오전 6:33
- * description    : 재고 예약 Usecase
+ * description    : 예약된 재고 확정 Usecase
  */
 @UseCase
-class ReserveStockUseCase(
+class ConfirmStockUseCase(
     private val inventoryRepository: InventoryRepository,
     private val integrationEventPublisher: IntegrationEventPublisher,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * 예약된 재고 확정 처리 (결제 성공 시)
+     */
     @Transactional
-    fun execute(command: ReserveStockCommand, context: MessageContext) {
+    fun execute(command: ConfirmStockCommand, context: MessageContext) {
         // === Phase 1: Lock 획득 및 검증 (상태 변경 없음) ===
 
         // 1-1. 데드락 방지를 위해 skuId 순으로 정렬
@@ -45,27 +46,18 @@ class ReserveStockUseCase(
         val notFoundSkuIds = skuIds.filterNot { it in foundSkuIds }
 
         if (notFoundSkuIds.isNotEmpty()) {
-            val failedItems = notFoundSkuIds.map { skuId ->
-                val item = sortedItems.first { it.skuId == skuId }
-                StockReservationFailedEvent.FailedItem(
-                    skuId = skuId,
-                    requestedQuantity = item.quantity,
-                    availableQuantity = null,
-                )
-            }
-
             integrationEventPublisher.publish(
-                StockReservationFailedEvent(
+                StockConfirmFailedEvent(
                     orderId = command.orderId,
-                    reason = "INVENTORY_NOT_FOUND",
-                    failedItems = failedItems,
+                    reservationId = command.reservationId,
+                    reason = "INVENTORY_NOT_FOUND: $notFoundSkuIds",
                     correlationId = context.correlationId,
                     causationId = context.causationId,
                 ),
             )
 
             logger.warn(
-                "Stock reservation failed - inventory not found: orderId=${command.orderId}, notFound=$notFoundSkuIds",
+                "Stock confirmation failed - inventory not found: orderId=${command.orderId}, notFound=$notFoundSkuIds",
             )
             throw NotFoundException(
                 InventoryErrorCode.INVENTORY_NOT_FOUND,
@@ -73,40 +65,34 @@ class ReserveStockUseCase(
             )
         }
 
-        // 1-4. 재고 가용성 검증 (상태 변경 없음)
+        // 1-4. 예약 재고 충분성 검증 (상태 변경 없음)
         val inventoryMap = inventories.associateBy { it.skuId }
-        val failedItems = mutableListOf<StockReservationFailedEvent.FailedItem>()
+        val insufficientReserved = mutableListOf<String>()
 
         sortedItems.forEach { item ->
             val inventory = inventoryMap[item.skuId]!!
-            val available = inventory.stock.available
+            val reserved = inventory.stock.reserved
 
-            if (available < item.quantity) {
-                failedItems.add(
-                    StockReservationFailedEvent.FailedItem(
-                        skuId = item.skuId,
-                        requestedQuantity = item.quantity,
-                        availableQuantity = available,
-                    ),
-                )
+            if (reserved < item.quantity) {
+                insufficientReserved.add("${item.skuId}(requested=${item.quantity}, reserved=$reserved)")
             }
         }
 
         // 1-5. 검증 실패 시 실패 이벤트 발행 및 예외 던지기
-        if (failedItems.isNotEmpty()) {
+        if (insufficientReserved.isNotEmpty()) {
             integrationEventPublisher.publish(
-                StockReservationFailedEvent(
+                StockConfirmFailedEvent(
                     orderId = command.orderId,
-                    reason = "NOT_ENOUGH_STOCK",
-                    failedItems = failedItems,
+                    reservationId = command.reservationId,
+                    reason = "NOT_ENOUGH_RESERVED: ${insufficientReserved.joinToString(", ")}",
                     correlationId = context.correlationId,
                     causationId = context.causationId,
                 ),
             )
 
-            logger.warn("Stock reservation failed: orderId=${command.orderId}, failedItems=${failedItems.size}")
+            logger.warn("Stock confirmation failed: orderId=${command.orderId}, insufficient=$insufficientReserved")
             throw NotEnoughStockException(
-                message = "Stock reservation failed for ${failedItems.size} item(s): ${failedItems.map { it.skuId }}",
+                message = "Not enough reserved stock: $insufficientReserved",
             )
         }
 
@@ -114,25 +100,25 @@ class ReserveStockUseCase(
 
         sortedItems.forEach { item ->
             val inventory = inventoryMap[item.skuId]!!
-            inventory.reserve(item.quantity)
+            inventory.confirm(item.quantity)
             inventoryRepository.save(inventory)
         }
 
-        // 2-1. 도메인 이벤트 수집 및 Integration Event 발행
-        val domainEvents = inventories.flatMap { it.pullDomainEvents() }
-        val items = domainEvents
-            .filterIsInstance<StockReserved>()
-            .map { Item(it.skuId, it.quantity) }
+        // 2-1. 성공 이벤트 발행
+        val confirmedItems = sortedItems.map { item ->
+            StockConfirmedEvent.ConfirmedItem(item.skuId, item.quantity)
+        }
 
         integrationEventPublisher.publish(
-            StockReservedEvent(
+            StockConfirmedEvent(
                 orderId = command.orderId,
-                items = items,
+                reservationId = command.reservationId,
+                items = confirmedItems,
                 correlationId = context.correlationId,
                 causationId = context.causationId,
             ),
         )
 
-        logger.info("Stock reserved successfully: orderId=${command.orderId}, items=${items.size}")
+        logger.info("Stock confirmed successfully: orderId=${command.orderId}, items=${confirmedItems.size}")
     }
 }

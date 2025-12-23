@@ -1,9 +1,9 @@
 package com.koosco.inventoryservice.infra.messaging.kafka.producer
 
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.inventoryservice.application.event.IntegrationEventPublisher
-import com.koosco.inventoryservice.infra.messaging.kafka.config.InventoryIntegrationTopicResolver
-import com.koosco.inventoryservice.infra.messaging.kafka.message.InventoryIntegrationEvent
+import com.koosco.inventoryservice.application.contract.InventoryIntegrationEvent
+import com.koosco.inventoryservice.application.port.IntegrationEventPublisher
+import com.koosco.inventoryservice.common.config.kafka.KafkaTopicResolver
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class KafkaIntegrationEventPublisher(
-    private val topicResolver: InventoryIntegrationTopicResolver,
+    private val topicResolver: KafkaTopicResolver,
     private val kafkaTemplate: KafkaTemplate<String, CloudEvent<*>>,
 
     @Value("\${spring.application.name}")
