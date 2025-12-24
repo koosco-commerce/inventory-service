@@ -1,6 +1,7 @@
 package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.inventoryservice.application.command.CancelStockCommand
 import com.koosco.inventoryservice.application.contract.inbound.order.OrderCancelledEvent
 import com.koosco.inventoryservice.application.usecase.ReleaseStockUseCase
@@ -28,32 +29,40 @@ class KafkaOrderCancelledEventConsumer(private val releaseStockUseCase: ReleaseS
         topics = ["\${inventory.topic.integration.mappings.order.canceled}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
-    fun onOrderCancelled(@Valid event: CloudEvent<OrderCancelledEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onOrderCancelled(@Valid event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
                 logger.error("OrderCanceled is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
+        val orderCancelled = try {
+            objectMapper.convertValue(payload, OrderCancelledEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize OrderCancelledEvent: eventId=${event.id}", e)
+            ack.acknowledge() // poison message → skip
+            return
+        }
+
         logger.info(
-            "Received OrderCanceled: eventId=${event.id}, orderId=${data.orderId}, items=${data.items}, reason=${data.reason}",
+            "Received OrderCanceled: eventId=${event.id}, orderId=${orderCancelled.orderId}, items=${orderCancelled.items}, reason=${orderCancelled.reason}",
         )
 
         val context = MessageContext(
-            correlationId = data.correlationId,
+            correlationId = orderCancelled.correlationId,
             causationId = event.id,
         )
 
         val command = CancelStockCommand(
-            orderId = data.orderId,
-            items = data.items.map { item ->
+            orderId = orderCancelled.orderId,
+            items = orderCancelled.items.map { item ->
                 CancelStockCommand.CancelledSku(
                     skuId = item.skuId,
                     quantity = item.quantity,
                 )
             },
-            reason = mapCancelReason(data.reason),
+            reason = mapCancelReason(orderCancelled.reason),
         )
 
         try {
@@ -61,11 +70,11 @@ class KafkaOrderCancelledEventConsumer(private val releaseStockUseCase: ReleaseS
 
             ack.acknowledge()
             logger.info(
-                "Stock reservation cancelled: eventId=${event.id}, orderId=${data.orderId}, items=${data.items}",
+                "Stock reservation cancelled: eventId=${event.id}, orderId=${orderCancelled.orderId}, items=${orderCancelled.items}",
             )
         } catch (e: Exception) {
             logger.error(
-                "Failed to process OrderCanceled event: eventId=${event.id}, orderId=${data.orderId}",
+                "Failed to process OrderCanceled event: eventId=${event.id}, orderId=${orderCancelled.orderId}",
                 e,
             )
             // TODO: 주문 취소에 따른 재고 증가는 반드시 일어나야하므로 재시도 후 DLQ 처리

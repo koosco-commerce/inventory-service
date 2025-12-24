@@ -1,6 +1,7 @@
 package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.inventoryservice.application.command.ConfirmStockCommand
 import com.koosco.inventoryservice.application.contract.inbound.order.OrderConfirmedEvent
 import com.koosco.inventoryservice.application.usecase.ConfirmStockUseCase
@@ -28,26 +29,34 @@ class KafkaOrderConfirmedEventConsumer(private val confirmStockUseCase: ConfirmS
         topics = ["\${inventory.topic.integration.mappings.order.confirmed}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
-    fun onOrderConfirmed(@Valid event: CloudEvent<OrderConfirmedEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onOrderConfirmed(@Valid event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
-                logger.error("OrderCompleted is null: eventId=${event.id}")
+                logger.error("OrderConfirmedEvent is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
+        val orderConfirmed = try {
+            objectMapper.convertValue(payload, OrderConfirmedEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize OrderConfirmedEvent: eventId=${event.id}", e)
+            ack.acknowledge() // poison message → skip
+            return
+        }
+
         logger.info(
-            "Received OrderCompleted: eventId=${event.id}, orderId=${data.orderId}, items=${data.items}",
+            "Received OrderConfirmedEvent: eventId=${event.id}, orderId=${orderConfirmed.orderId}, items=${orderConfirmed.items}",
         )
 
         val context = MessageContext(
-            correlationId = data.correlationId,
+            correlationId = orderConfirmed.correlationId,
             causationId = event.id,
         )
 
         val command = ConfirmStockCommand(
-            orderId = data.orderId,
-            items = data.items.map { item ->
+            orderId = orderConfirmed.orderId,
+            items = orderConfirmed.items.map { item ->
                 ConfirmStockCommand.ConfirmedSku(
                     skuId = item.skuId,
                     quantity = item.quantity,
@@ -60,16 +69,16 @@ class KafkaOrderConfirmedEventConsumer(private val confirmStockUseCase: ConfirmS
 
             ack.acknowledge()
             logger.info(
-                "Successfully confirmed stock for ORDER: eventId=${event.id}, orderId=${data.orderId}, items=${data.items}",
+                "Successfully confirmed stock for ORDER: eventId=${event.id}, orderId=${orderConfirmed.orderId}, items=${orderConfirmed.items}",
             )
         } catch (_: NotEnoughStockException) {
             logger.warn(
-                "Stock confirmation failed: eventId=${event.id}, orderId=${data.orderId}",
+                "Stock confirmation failed: eventId=${event.id}, orderId=${orderConfirmed.orderId}",
             )
             ack.acknowledge()
         } catch (e: Exception) {
             logger.error(
-                "Failed to process OrderCompleted event: eventId=${event.id}, orderId=${data.orderId}",
+                "Failed to process OrderConfirmedEvent event: eventId=${event.id}, orderId=${orderConfirmed.orderId}",
                 e,
             )
             throw e

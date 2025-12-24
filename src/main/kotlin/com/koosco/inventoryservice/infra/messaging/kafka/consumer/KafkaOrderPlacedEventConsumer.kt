@@ -1,6 +1,7 @@
 package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.inventoryservice.application.command.ReserveStockCommand
 import com.koosco.inventoryservice.application.contract.inbound.order.OrderPlacedEvent
 import com.koosco.inventoryservice.application.usecase.ReserveStockUseCase
@@ -26,29 +27,37 @@ class KafkaOrderPlacedEventConsumer(private val reserveStockUseCase: ReserveStoc
         topics = ["\${inventory.topic.integration.mappings.order.placed}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
-    fun onOrderPlaced(@Valid event: CloudEvent<OrderPlacedEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onOrderPlaced(@Valid event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
                 logger.error("OrderPlacedEvent data is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
+        val orderPlaced = try {
+            objectMapper.convertValue(payload, OrderPlacedEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize OrderPlacedEvent: eventId=${event.id}", e)
+            ack.acknowledge() // poison message → skip
+            return
+        }
+
         logger.info(
             "Received OrderPlacedEvent: eventId={}, correlationId={}, orderId={}",
             event.id,
-            data.correlationId,
-            data.orderId,
+            orderPlaced.correlationId,
+            orderPlaced.orderId,
         )
 
         val context = MessageContext(
-            correlationId = data.correlationId,
+            correlationId = orderPlaced.correlationId,
             causationId = event.id,
         )
 
         val command = ReserveStockCommand(
-            orderId = data.orderId,
-            items = data.items.map { item ->
+            orderId = orderPlaced.orderId,
+            items = orderPlaced.items.map { item ->
                 ReserveStockCommand.ReservedSku(
                     skuId = item.skuId,
                     quantity = item.quantity,
@@ -61,17 +70,17 @@ class KafkaOrderPlacedEventConsumer(private val reserveStockUseCase: ReserveStoc
 
             ack.acknowledge()
             logger.info(
-                "Successfully reserved stock for ORDER: eventId=${event.id}, orderId=${data.orderId}, items=${data.items}",
+                "Successfully reserved stock for ORDER: eventId=${event.id}, orderId=${orderPlaced.orderId}, items=${orderPlaced.items}",
             )
         } catch (_: NotEnoughStockException) {
             // 재고 부족 -> 재시도하지 않음 -> TODO : notification 처리
             logger.warn(
-                "Stock reservation failed: eventId=${event.id}, orderId=${data.orderId}",
+                "Stock reservation failed: eventId=${event.id}, orderId=${orderPlaced.orderId}",
             )
             ack.acknowledge()
         } catch (e: Exception) {
             logger.error(
-                "Failed to process OrderPlacedEvent: eventId=${event.id}, orderId=${data.orderId}",
+                "Failed to process OrderPlacedEvent: eventId=${event.id}, orderId=${orderPlaced.orderId}",
                 e,
             )
             // ❗ ack 안 함 → retry / DLQ

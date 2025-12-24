@@ -1,6 +1,7 @@
 package com.koosco.inventoryservice.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.inventoryservice.application.command.InitStockCommand
 import com.koosco.inventoryservice.application.contract.inbound.catalog.ProductSkuCreatedEvent
 import com.koosco.inventoryservice.application.usecase.InitializeStockUseCase
@@ -28,37 +29,45 @@ class KafkaProductSkuCreatedConsumer(private val initializeStockUseCase: Initial
         topics = ["\${inventory.topic.integration.mappings.product.sku.created}"],
         groupId = "inventory-service",
     )
-    fun onProductSkuCreated(@Valid event: CloudEvent<ProductSkuCreatedEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onProductSkuCreated(@Valid event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
                 logger.error("ProductSkuCreated is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
+        val skuCreated = try {
+            objectMapper.convertValue(payload, ProductSkuCreatedEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize ProductSkuCreatedEvent: eventId=${event.id}", e)
+            ack.acknowledge() // poison message → skip
+            return
+        }
+
         logger.info(
-            "Received ProductSkuCreated: eventId=${event.id}, " +
-                "skuId=${data.skuId}, productId=${data.productId}, initialQuantity=${data.initialQuantity}",
+            "Received ProductSkuCreatedEvent: eventId=${event.id}, " +
+                "skuId=${skuCreated.skuId}, productId=${skuCreated.productId}, initialQuantity=${skuCreated.initialQuantity}",
         )
 
         try {
             // 재고 초기화
             initializeStockUseCase.execute(
                 InitStockCommand(
-                    data.skuId,
-                    data.initialQuantity,
+                    skuCreated.skuId,
+                    skuCreated.initialQuantity,
                 ),
             )
             ack.acknowledge()
 
             logger.info(
-                "Successfully initialized stock for ProductSku: eventId=${event.id}, skuId=${data.skuId}, " +
-                    "productId=${data.productId}, initialQuantity=${data.initialQuantity}",
+                "Successfully initialized stock for ProductSku: eventId=${event.id}, skuId=${skuCreated.skuId}, " +
+                    "productId=${skuCreated.productId}, initialQuantity=${skuCreated.initialQuantity}",
             )
         } catch (e: Exception) {
             logger.error(
                 "Failed to process SKU created event: ${event.id}, " +
-                    "skuId=${data.skuId}, productId=${data.productId}",
+                    "skuId=${skuCreated.skuId}, productId=${skuCreated.productId}",
                 e,
             )
             // TODO: 이 SKU에 대해 재고가 ‘최소 1번’은 초기화되어 있어야 한다 -> 재시도 후 DLQ 처리

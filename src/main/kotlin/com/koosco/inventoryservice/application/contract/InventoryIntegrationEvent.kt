@@ -30,7 +30,7 @@ interface InventoryIntegrationEvent {
     /**
      * CloudEvent 변환 (공통)
      */
-    fun toCloudEvent(source: String): CloudEvent<InventoryIntegrationEvent> = CloudEvent.of(
+    fun toCloudEvent(source: String): CloudEvent<Any> = CloudEvent.of(
         source = source,
         type = getEventType(),
         subject = getSubject(),
