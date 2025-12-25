@@ -4,12 +4,12 @@ import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.NotFoundException
 import com.koosco.inventoryservice.application.command.BulkReduceStockCommand
 import com.koosco.inventoryservice.application.command.ReduceStockCommand
-import com.koosco.inventoryservice.application.port.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepositoryPort
 import com.koosco.inventoryservice.common.InventoryErrorCode
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
-class ReduceStockUseCase(private val inventoryRepository: InventoryRepository) {
+class ReduceStockUseCase(private val inventoryRepository: InventoryRepositoryPort) {
 
     @Transactional
     fun execute(command: ReduceStockCommand) {

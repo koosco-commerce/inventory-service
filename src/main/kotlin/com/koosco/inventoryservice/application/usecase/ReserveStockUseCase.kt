@@ -1,13 +1,14 @@
 package com.koosco.inventoryservice.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
+import com.koosco.common.core.event.DomainEvent
 import com.koosco.common.core.exception.NotFoundException
 import com.koosco.inventoryservice.application.command.ReserveStockCommand
 import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservationFailedEvent
 import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservedEvent
 import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservedEvent.Item
 import com.koosco.inventoryservice.application.port.IntegrationEventPublisher
-import com.koosco.inventoryservice.application.port.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepositoryPort
 import com.koosco.inventoryservice.common.InventoryErrorCode
 import com.koosco.inventoryservice.common.MessageContext
 import com.koosco.inventoryservice.domain.event.StockReserved
@@ -23,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional
  */
 @UseCase
 class ReserveStockUseCase(
-    private val inventoryRepository: InventoryRepository,
+    private val inventoryRepository: InventoryRepositoryPort,
     private val integrationEventPublisher: IntegrationEventPublisher,
 ) {
 
@@ -43,6 +44,8 @@ class ReserveStockUseCase(
         // 1-3. 존재하지 않는 SKU 확인
         val foundSkuIds = inventories.map { it.skuId }.toSet()
         val notFoundSkuIds = skuIds.filterNot { it in foundSkuIds }
+
+        logger.info("foundSkuIds=${foundSkuIds.size}, notFoundSkuIds=${notFoundSkuIds.size}")
 
         if (notFoundSkuIds.isNotEmpty()) {
             val failedItems = notFoundSkuIds.map { skuId ->
@@ -119,7 +122,13 @@ class ReserveStockUseCase(
         }
 
         // 2-1. 도메인 이벤트 수집 및 Integration Event 발행
-        val domainEvents = inventories.flatMap { it.pullDomainEvents() }
+        val domainEvents: List<DomainEvent> = inventories.flatMap { it.pullDomainEvents() }
+        logger.info(
+            "domainEvents=${domainEvents.size}, domainEvents=${domainEvents.joinToString {
+                it::class.simpleName ?: "null"
+            }}",
+        )
+
         val items = domainEvents
             .filterIsInstance<StockReserved>()
             .map { Item(it.skuId, it.quantity) }

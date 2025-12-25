@@ -6,7 +6,7 @@ import com.koosco.inventoryservice.application.command.ConfirmStockCommand
 import com.koosco.inventoryservice.application.contract.outbound.inventory.StockConfirmFailedEvent
 import com.koosco.inventoryservice.application.contract.outbound.inventory.StockConfirmedEvent
 import com.koosco.inventoryservice.application.port.IntegrationEventPublisher
-import com.koosco.inventoryservice.application.port.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepositoryPort
 import com.koosco.inventoryservice.common.InventoryErrorCode
 import com.koosco.inventoryservice.common.MessageContext
 import com.koosco.inventoryservice.domain.exception.NotEnoughStockException
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional
  */
 @UseCase
 class ConfirmStockUseCase(
-    private val inventoryRepository: InventoryRepository,
+    private val inventoryRepository: InventoryRepositoryPort,
     private val integrationEventPublisher: IntegrationEventPublisher,
 ) {
 

@@ -2,7 +2,7 @@ package com.koosco.inventoryservice.application.port
 
 import com.koosco.inventoryservice.domain.entity.Inventory
 
-interface InventoryRepository {
+interface InventoryRepositoryPort {
 
     fun save(inventory: Inventory)
 

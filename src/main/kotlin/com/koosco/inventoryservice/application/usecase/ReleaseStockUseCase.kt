@@ -3,7 +3,7 @@ package com.koosco.inventoryservice.application.usecase
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.inventoryservice.application.command.CancelStockCommand
 import com.koosco.inventoryservice.application.port.IntegrationEventPublisher
-import com.koosco.inventoryservice.application.port.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepositoryPort
 import com.koosco.inventoryservice.common.MessageContext
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional
  */
 @UseCase
 class ReleaseStockUseCase(
-    private val inventoryRepository: InventoryRepository,
+    private val inventoryRepository: InventoryRepositoryPort,
     private val integrationEventPublisher: IntegrationEventPublisher,
 ) {
     /**

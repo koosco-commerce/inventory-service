@@ -3,7 +3,7 @@ package com.koosco.inventoryservice.application.usecase
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.BadRequestException
 import com.koosco.inventoryservice.application.command.InitStockCommand
-import com.koosco.inventoryservice.application.port.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepositoryPort
 import com.koosco.inventoryservice.domain.entity.Inventory
 import com.koosco.inventoryservice.domain.exception.InventoryAlreadyInitialized
 import com.koosco.inventoryservice.domain.vo.Stock
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional
  * 새로운 상품이 생성되었을 때 재고를 초기화합니다.
  */
 @UseCase
-class InitializeStockUseCase(private val inventoryRepository: InventoryRepository) {
+class InitializeStockUseCase(private val inventoryRepository: InventoryRepositoryPort) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 

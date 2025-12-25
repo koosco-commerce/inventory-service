@@ -3,12 +3,12 @@ package com.koosco.inventoryservice.application.usecase
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.inventoryservice.application.command.GetInventoriesCommand
 import com.koosco.inventoryservice.application.command.GetInventoryCommand
-import com.koosco.inventoryservice.application.port.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepositoryPort
 import com.koosco.inventoryservice.application.result.GetInventoryResult
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
-class GetInventoryUseCase(private val inventoryRepository: InventoryRepository) {
+class GetInventoryUseCase(private val inventoryRepository: InventoryRepositoryPort) {
 
     @Transactional(readOnly = true)
     fun execute(command: GetInventoryCommand): GetInventoryResult {
