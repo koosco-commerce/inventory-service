@@ -24,7 +24,7 @@ class KafkaOrderPlacedEventConsumer(private val reserveStockUseCase: ReserveStoc
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @KafkaListener(
-        topics = ["\${inventory.topic.integration.mappings.order.placed}"],
+        topics = ["\${inventory.topic.mappings.order.placed}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
     fun onOrderPlaced(@Valid event: CloudEvent<*>, ack: Acknowledgment) {

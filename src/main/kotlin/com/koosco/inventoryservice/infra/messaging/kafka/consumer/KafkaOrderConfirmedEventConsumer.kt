@@ -26,7 +26,7 @@ class KafkaOrderConfirmedEventConsumer(private val confirmStockUseCase: ConfirmS
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @KafkaListener(
-        topics = ["\${inventory.topic.integration.mappings.order.confirmed}"],
+        topics = ["\${inventory.topic.mappings.order.confirmed}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
     fun onOrderConfirmed(@Valid event: CloudEvent<*>, ack: Acknowledgment) {

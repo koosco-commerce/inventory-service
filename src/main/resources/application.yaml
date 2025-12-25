@@ -37,13 +37,20 @@ management:
 
 inventory:
   topic:
-    default: koosco.commerce.integration.inventory
+    default: koosco.commerce.inventory.default
     mappings:
-      "stock.failed": koosco.commerce.stock.failed
-      "stock.reserved": koosco.commerce.stock.reserved
-      "stock.reservation.failed": koosco.commerce.stock.reservation.failed
-      "stock.confirmed": koosco.commerce.stock.confirmed
-      "stock.confirm.failed": koosco.commerce.stock.confirm.failed
+      order:
+        cancelled: koosco.commerce.order.cancelled
+        confirmed: koosco.commerce.order.confirmed
+        placed: koosco.commerce.order.placed
+      product:
+        "sku.created": koosco.commerce.sku.created
+      stock:
+        reserved: koosco.commerce.stock.reserved
+        "reservation.failed": koosco.commerce.stock.reservation.failed
+        confirmed: koosco.commerce.stock.confirmed
+        "confirm.failed": koosco.commerce.stock.confirm.failed
+
 
 
 springdoc:

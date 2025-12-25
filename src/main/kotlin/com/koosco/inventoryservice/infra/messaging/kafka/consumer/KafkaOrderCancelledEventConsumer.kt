@@ -26,7 +26,7 @@ class KafkaOrderCancelledEventConsumer(private val releaseStockUseCase: ReleaseS
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @KafkaListener(
-        topics = ["\${inventory.topic.integration.mappings.order.canceled}"],
+        topics = ["\${inventory.topic.mappings.order.cancelled}"],
         groupId = "\${spring.kafka.consumer.group-id}",
     )
     fun onOrderCancelled(@Valid event: CloudEvent<*>, ack: Acknowledgment) {

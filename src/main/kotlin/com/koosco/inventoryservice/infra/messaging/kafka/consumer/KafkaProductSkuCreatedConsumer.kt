@@ -26,7 +26,7 @@ class KafkaProductSkuCreatedConsumer(private val initializeStockUseCase: Initial
      * 각 SKU가 생성될 때마다 개별적으로 재고를 초기화합니다.
      */
     @KafkaListener(
-        topics = ["\${inventory.topic.integration.mappings.product.sku.created}"],
+        topics = ["\${inventory.topic.mappings.product.sku.created}"],
         groupId = "inventory-service",
     )
     fun onProductSkuCreated(@Valid event: CloudEvent<*>, ack: Acknowledgment) {
