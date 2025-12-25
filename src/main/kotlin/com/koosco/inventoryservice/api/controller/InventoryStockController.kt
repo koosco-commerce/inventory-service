@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*
 
 @Tag(name = "Inventory Stock Controller", description = "재고 관리 API")
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping("/api/inventories")
 class InventoryStockController(
     private val addStockUseCase: AddStockUseCase,
     private val reduceStockUseCase: ReduceStockUseCase,
@@ -27,12 +27,12 @@ class InventoryStockController(
         summary = "재고 추가",
         description = "SKU ID로 재고를 추가합니다.",
     )
-    @PostMapping("/add/{skuId}")
-    fun addInventory(@PathVariable skuId: String, @RequestBody request: AddStockRequest): ApiResponse<Any> {
+    @PostMapping("/{skuId}/increase")
+    fun addInventory(@PathVariable skuId: String, @RequestBody body: AddStockRequest): ApiResponse<Any> {
         addStockUseCase.execute(
             AddStockCommand(
                 skuId = skuId,
-                addingQuantity = request.addingQuantity,
+                addingQuantity = body.quantity,
             ),
         )
 
@@ -43,11 +43,11 @@ class InventoryStockController(
         summary = "대량 재고 추가",
         description = "여러 SKU ID로 재고를 대량 추가합니다.",
     )
-    @PostMapping("/add")
-    fun addBulkInventories(@RequestBody request: BulkAddStockRequest): ApiResponse<Any> {
+    @PostMapping("/increase")
+    fun addBulkInventories(@RequestBody body: BulkAddStockRequest): ApiResponse<Any> {
         addStockUseCase.execute(
             BulkAddStockCommand(
-                items = request.items.map {
+                items = body.items.map {
                     BulkAddStockCommand.AddingStockInfo(
                         it.skuId,
                         it.quantity,
@@ -63,12 +63,12 @@ class InventoryStockController(
         summary = "재고 감소",
         description = "SKU ID로 재고를 감소합니다.",
     )
-    @PostMapping("/remove/{skuId}")
-    fun reduceInventory(@PathVariable skuId: String, @RequestBody request: ReduceStockRequest): ApiResponse<Any> {
+    @PostMapping("/{skuId}/decrease")
+    fun reduceInventory(@PathVariable skuId: String, @RequestBody body: ReduceStockRequest): ApiResponse<Any> {
         reduceStockUseCase.execute(
             ReduceStockCommand(
                 skuId = skuId,
-                reducingQuantity = request.reducingQuantity,
+                reducingQuantity = body.quantity,
             ),
         )
 
@@ -79,11 +79,11 @@ class InventoryStockController(
         summary = "대량 재고 감소",
         description = "SKU ID로 재고를 대량으로 감소합니다.",
     )
-    @PostMapping("/remove")
-    fun reduceBulkInventories(@RequestBody request: BulkReduceStockRequest): ApiResponse<Any> {
+    @PostMapping("/decrease")
+    fun reduceBulkInventories(@RequestBody body: BulkReduceStockRequest): ApiResponse<Any> {
         reduceStockUseCase.execute(
             BulkReduceStockCommand(
-                request.items.map {
+                body.items.map {
                     BulkReduceStockCommand.ReducingStockInfo(
                         it.skuId,
                         it.quantity,

@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.Operation
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping("/api/inventories")
 class QueryInventoryController(private val getInventoryUseCase: GetInventoryUseCase) {
 
     @Operation(
@@ -37,8 +37,8 @@ class QueryInventoryController(private val getInventoryUseCase: GetInventoryUseC
         description = "여러 SKU ID로 재고 정보를 대량 조회합니다.",
     )
     @PostMapping("/bulk")
-    fun getInventoryBySkuIds(@RequestBody request: GetInventoriesRequest): ApiResponse<GetInventoriesResponse> {
-        val result = getInventoryUseCase.execute(GetInventoriesCommand(skuIds = request.skuIds))
+    fun getInventoryBySkuIds(@RequestBody body: GetInventoriesRequest): ApiResponse<GetInventoriesResponse> {
+        val result = getInventoryUseCase.execute(GetInventoriesCommand(skuIds = body.skuIds))
 
         return ApiResponse.success(
             GetInventoriesResponse(

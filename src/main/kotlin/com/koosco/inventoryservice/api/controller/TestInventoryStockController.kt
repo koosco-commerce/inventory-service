@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @Profile("local")
 @RestController
-@RequestMapping("/api/inventory/test")
+@RequestMapping("/api/inventories/test")
 class TestInventoryStockController(private val inventorySeedUseCase: InventorySeedUseCase) {
 
     @PostMapping("/init")
