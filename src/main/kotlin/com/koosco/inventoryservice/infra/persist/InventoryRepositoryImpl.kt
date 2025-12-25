@@ -1,6 +1,6 @@
 package com.koosco.inventoryservice.infra.persist
 
-import com.koosco.inventoryservice.application.port.InventoryRepository
+import com.koosco.inventoryservice.application.port.InventoryRepositoryPort
 import com.koosco.inventoryservice.domain.entity.Inventory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 class InventoryRepositoryImpl(
     private val jpaInventoryRepository: JpaInventoryRepository,
     private val inventoryQuery: InventoryQuery,
-) : InventoryRepository {
+) : InventoryRepositoryPort {
 
     override fun save(inventory: Inventory) {
         jpaInventoryRepository.save(inventory)
