@@ -8,7 +8,7 @@ data class GetInventoriesRequest(val skuIds: List<String>)
 /**
  * 재고 추가 요청 DTO
  */
-data class AddStockRequest(val addingQuantity: Int)
+data class AddStockRequest(val quantity: Int)
 
 /**
  * 대량 재고 추가 요청 DTO
@@ -21,7 +21,7 @@ data class BulkAddStockRequest(val items: List<AddingStockInfo>) {
 /**
  * 재고 감소 요청 DTO
  */
-data class ReduceStockRequest(val reducingQuantity: Int)
+data class ReduceStockRequest(val quantity: Int)
 
 /**
  * 대량 재고 감소 요청 DTO
