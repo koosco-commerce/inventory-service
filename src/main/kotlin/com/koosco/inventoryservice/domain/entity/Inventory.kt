@@ -29,8 +29,16 @@ class Inventory(
     var updatedAt: LocalDateTime = LocalDateTime.now(),
 
     @Transient
-    val domainEvents: MutableList<DomainEvent> = mutableListOf(),
+    private var _domainEvents: MutableList<DomainEvent>? = null,
 ) {
+
+    private val domainEvents: MutableList<DomainEvent>
+        get() = _domainEvents ?: mutableListOf<DomainEvent>().also { _domainEvents = it }
+
+    @PostLoad
+    fun onLoad() {
+        _domainEvents = mutableListOf()
+    }
 
     @PreUpdate
     fun onUpdate() {
