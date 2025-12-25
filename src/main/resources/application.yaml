@@ -50,8 +50,7 @@ inventory:
         "reservation.failed": koosco.commerce.stock.reservation.failed
         confirmed: koosco.commerce.stock.confirmed
         "confirm.failed": koosco.commerce.stock.confirm.failed
-
-
+        cancelled: koosco.commerce.stock.cancelled
 
 springdoc:
   swagger-ui:
