@@ -2,11 +2,11 @@ package com.koosco.inventoryservice.order
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.inventoryservice.application.contract.outbound.inventory.StockConfirmFailedEvent
-import com.koosco.inventoryservice.application.contract.outbound.inventory.StockConfirmedEvent
-import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservationFailedEvent
-import com.koosco.inventoryservice.application.contract.outbound.inventory.StockReservedEvent
-import com.koosco.inventoryservice.application.usecase.InventorySeedUseCase
+import com.koosco.inventoryservice.inventory.application.contract.outbound.inventory.StockConfirmFailedEvent
+import com.koosco.inventoryservice.inventory.application.contract.outbound.inventory.StockConfirmedEvent
+import com.koosco.inventoryservice.inventory.application.contract.outbound.inventory.StockReservationFailedEvent
+import com.koosco.inventoryservice.inventory.application.contract.outbound.inventory.StockReservedEvent
+import com.koosco.inventoryservice.inventory.application.usecase.InventorySeedUseCase
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.kafka.annotation.KafkaListener
