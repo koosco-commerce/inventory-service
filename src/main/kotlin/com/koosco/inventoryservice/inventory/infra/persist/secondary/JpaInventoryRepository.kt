@@ -1,4 +1,4 @@
-package com.koosco.inventoryservice.inventory.infra.persist
+package com.koosco.inventoryservice.inventory.infra.persist.secondary
 
 import com.koosco.inventoryservice.inventory.domain.entity.Inventory
 import jakarta.persistence.LockModeType
