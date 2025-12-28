@@ -14,7 +14,6 @@ import com.koosco.inventoryservice.inventory.application.contract.InventoryInteg
  */
 data class StockConfirmedEvent(
     override val orderId: Long,
-    val reservationId: String? = null,
     val items: List<ConfirmedItem>,
 
     val correlationId: String,
@@ -31,7 +30,6 @@ data class StockConfirmedEvent(
  */
 data class StockConfirmFailedEvent(
     override val orderId: Long,
-    val reservationId: String? = null,
     val reason: String,
 
     val correlationId: String,

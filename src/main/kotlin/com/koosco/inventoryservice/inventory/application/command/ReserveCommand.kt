@@ -15,7 +15,7 @@ data class ReserveStockCommand(val orderId: Long, val items: List<ReservedSku>, 
 /**
  * 결제 성공 이후 예약 확정(차감 확정)
  */
-data class ConfirmStockCommand(val orderId: Long, val reservationId: String? = null, val items: List<ConfirmedSku>) {
+data class ConfirmStockCommand(val orderId: Long, val items: List<ConfirmedSku>) {
     data class ConfirmedSku(val skuId: String, val quantity: Int)
 }
 

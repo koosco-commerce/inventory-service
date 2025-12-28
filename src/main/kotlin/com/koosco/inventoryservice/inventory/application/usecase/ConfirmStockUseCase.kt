@@ -49,7 +49,6 @@ class ConfirmStockUseCase(
             integrationEventPublisher.publish(
                 StockConfirmFailedEvent(
                     orderId = command.orderId,
-                    reservationId = command.reservationId,
                     reason = "INVENTORY_NOT_FOUND: $notFoundSkuIds",
                     correlationId = context.correlationId,
                     causationId = context.causationId,
@@ -83,7 +82,6 @@ class ConfirmStockUseCase(
             integrationEventPublisher.publish(
                 StockConfirmFailedEvent(
                     orderId = command.orderId,
-                    reservationId = command.reservationId,
                     reason = "NOT_ENOUGH_RESERVED: ${insufficientReserved.joinToString(", ")}",
                     correlationId = context.correlationId,
                     causationId = context.causationId,
@@ -112,7 +110,6 @@ class ConfirmStockUseCase(
         integrationEventPublisher.publish(
             StockConfirmedEvent(
                 orderId = command.orderId,
-                reservationId = command.reservationId,
                 items = confirmedItems,
                 correlationId = context.correlationId,
                 causationId = context.causationId,
