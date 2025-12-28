@@ -17,6 +17,10 @@ spring:
       group-id: inventory-service
       auto-offset-reset: earliest
       enable-auto-commit: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
 
 management:
   endpoints:
