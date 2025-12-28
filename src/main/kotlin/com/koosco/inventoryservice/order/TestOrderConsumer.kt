@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
  * fileName       : TestOrderConsumer
  * author         : koo
  * date           : 2025. 12. 26. 오전 5:15
- * description    : Integration Event 발행 테스트를 위한 Consumer (local 환경에서만 사용)
+ * description    : Integration Event 발행 테스트를 위한 Consumer, local profile only
  */
 @Profile("local")
 @Component
@@ -39,9 +39,9 @@ class TestOrderConsumer(
     fun onStockReserved(event: CloudEvent<*>) {
         logger.info("✅ [TEST] StockReserved received: eventId=${event.id}")
 
-        event.data?.let { payload ->
+        event.data?.let {
             try {
-                val stockReservedEvent = objectMapper.convertValue(payload, StockReservedEvent::class.java)
+                val stockReservedEvent = objectMapper.convertValue(it, StockReservedEvent::class.java)
                 logger.info("  → orderId=${stockReservedEvent.orderId}, items=${stockReservedEvent.items}")
                 addEvent("stock.reserved", stockReservedEvent)
             } catch (e: Exception) {

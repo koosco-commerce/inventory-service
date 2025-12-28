@@ -1,7 +1,9 @@
 package com.koosco.inventoryservice.inventory.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
+import com.koosco.inventoryservice.catalog.TestProductService
 import com.koosco.inventoryservice.inventory.application.port.InventorySeedPort
+import com.koosco.inventoryservice.order.TestOrderService
 import org.springframework.context.annotation.Profile
 import org.springframework.transaction.annotation.Transactional
 
@@ -9,27 +11,22 @@ import org.springframework.transaction.annotation.Transactional
  * fileName       : InventorySeedUseCase
  * author         : koo
  * date           : 2025. 12. 26. 오전 4:59
- * description    :
+ * description    : 더미 데이터 초기화 usecase
  */
 @Profile("local")
 @UseCase
 class InventorySeedUseCase(private val inventorySeedPort: InventorySeedPort) {
 
-    companion object {
-        const val INITIAL_STOCK = 10000
-        const val FIRST_SKU_ID = "00001f4c-a36c-4a70-9347-413ce52d5d61"
-        const val SECOND_SKU_ID = "0000298f-0c73-4df1-8576-ac232687c290"
-    }
-
     @Transactional
     fun execute() {
-        inventorySeedPort.init(FIRST_SKU_ID, INITIAL_STOCK)
-        inventorySeedPort.init(SECOND_SKU_ID, INITIAL_STOCK)
+        inventorySeedPort.init(TestOrderService.FIRST_SKU_ID, TestOrderService.INITIAL_STOCK)
+        inventorySeedPort.init(TestOrderService.SECOND_SKU_ID, TestOrderService.INITIAL_STOCK)
     }
 
     @Transactional
     fun clear() {
-        inventorySeedPort.init(FIRST_SKU_ID, 0)
-        inventorySeedPort.init(SECOND_SKU_ID, 0)
+        inventorySeedPort.init(TestOrderService.FIRST_SKU_ID, 0)
+        inventorySeedPort.init(TestOrderService.SECOND_SKU_ID, 0)
+        TestProductService.PRODUCTS.forEach { inventorySeedPort.deleteById(it.skuId) }
     }
 }

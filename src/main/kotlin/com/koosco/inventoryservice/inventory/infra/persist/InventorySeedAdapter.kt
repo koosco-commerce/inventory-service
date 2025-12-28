@@ -10,10 +10,10 @@ import org.springframework.transaction.annotation.Transactional
  * fileName       : InventorySeedAdapter
  * author         : koo
  * date           : 2025. 12. 26. 오전 4:57
- * description    :
+ * description    : 더미 데이터 영속성 처리를 위한 클래스, local profile only
  */
-@Component
 @Profile("local")
+@Component
 class InventorySeedAdapter(private val entityManager: EntityManager) : InventorySeedPort {
 
     @Transactional
@@ -28,6 +28,12 @@ class InventorySeedAdapter(private val entityManager: EntityManager) : Inventory
         )
             .setParameter("skuId", skuId)
             .setParameter("quantity", initialQuantity)
+            .executeUpdate()
+    }
+
+    override fun deleteById(skuId: String) {
+        entityManager.createQuery("DELETE FROM Inventory i WHERE i.skuId = :skuId")
+            .setParameter("skuId", skuId)
             .executeUpdate()
     }
 }

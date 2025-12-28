@@ -34,6 +34,7 @@ class TestOrderService(
         const val USER_ID = 11111111111
         const val FIRST_SKU_ID = "00001f4c-a36c-4a70-9347-413ce52d5d61"
         const val SECOND_SKU_ID = "0000298f-0c73-4df1-8576-ac232687c290"
+        const val INITIAL_STOCK = 10000
     }
 
     fun placeOrder(): OrderPlacedEvent {
@@ -50,7 +51,7 @@ class TestOrderService(
         )
 
         val event = CloudEvent.of(
-            source = "payment-service.order-seeder",
+            source = "payment-service.test-order",
             type = "order.placed",
             data = orderPlacedEvent,
         )
