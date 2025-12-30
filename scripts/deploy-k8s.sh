@@ -45,7 +45,7 @@ case ${ENVIRONMENT} in
         echo ""
 
         # docker-compose 확인
-        if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null 2>&1; then
+        if ! command -v docker-compose &> /dev/null && ! sudo -E docker compose version &> /dev/null 2>&1; then
             echo -e "${RED}Error: docker-compose not found${NC}"
             exit 1
         fi
@@ -91,7 +91,7 @@ case ${ENVIRONMENT} in
         else
             SPRING_PROFILES_ACTIVE=local \
             SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
-            docker compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
+            sudo -E docker compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
         fi
         echo -e "${GREEN}✓${NC} Services started with profile: local"
         echo ""
@@ -118,7 +118,7 @@ case ${ENVIRONMENT} in
             echo ""
 
             # docker-compose 확인
-            if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null 2>&1; then
+            if ! command -v docker-compose &> /dev/null && ! sudo -E docker compose version &> /dev/null 2>&1; then
                 echo -e "${RED}Error: docker-compose not found${NC}"
                 exit 1
             fi
@@ -164,7 +164,7 @@ case ${ENVIRONMENT} in
             else
                 SPRING_PROFILES_ACTIVE=load \
                 SPRING_KAFKA_BOOTSTRAP_SERVERS=172.31.32.89:9092 \
-                docker compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
+                sudo -E docker compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
             fi
             echo -e "${GREEN}✓${NC} Services started with profile: load"
             echo ""
