@@ -151,3 +151,8 @@ tasks.withType<Test> {
 tasks.jar {
     enabled = false
 }
+
+// Fix spotless task dependency issue
+tasks.matching { it.name.startsWith("spotless") }.configureEach {
+    mustRunAfter(tasks.withType<JavaCompile>())
+}
