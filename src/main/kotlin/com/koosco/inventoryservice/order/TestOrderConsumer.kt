@@ -126,7 +126,7 @@ class TestOrderConsumer(
      */
     fun clearReceivedEvents() {
         receivedEvents.clear()
-        inventorySeedUseCase.execute()
+        inventorySeedUseCase.clear()
         logger.info("🧹 [TEST] All received events cleared")
     }
 }

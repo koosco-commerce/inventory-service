@@ -1,6 +1,7 @@
 package com.koosco.inventoryservice.inventory.application.contract.outbound.inventory
 
 import com.koosco.inventoryservice.inventory.application.contract.InventoryIntegrationEvent
+import com.koosco.inventoryservice.inventory.domain.enums.StockReservationFailReason
 
 /**
  * fileName       : StockReservedEvent
@@ -26,7 +27,7 @@ data class StockReservedEvent(
  */
 data class StockReservationFailedEvent(
     override val orderId: Long,
-    val reason: String,
+    val reason: StockReservationFailReason?,
     val failedItems: List<FailedItem>?,
 
     val correlationId: String,

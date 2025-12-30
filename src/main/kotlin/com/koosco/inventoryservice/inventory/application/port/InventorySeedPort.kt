@@ -3,12 +3,14 @@ package com.koosco.inventoryservice.inventory.application.port
 /**
  * fileName       : InventorySeedPort
  * author         : koo
- * date           : 2025. 12. 26. 오전 4:55
- * description    : 더미 데이터 영속성 처리를 위한 인터페이스
+ * date           : 2025. 12. 30. 오전 12:06
+ * description    :
  */
 interface InventorySeedPort {
 
-    fun init(skuId: String, initialQuantity: Int)
+    fun initStock(skuId: String, initialQuantity: Int)
 
-    fun deleteById(skuId: String)
+    fun initStocks(skuIds: List<String>, initialQuantity: Int)
+
+    fun clear()
 }

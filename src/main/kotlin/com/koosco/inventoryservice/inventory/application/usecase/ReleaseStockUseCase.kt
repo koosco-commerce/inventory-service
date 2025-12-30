@@ -3,9 +3,8 @@ package com.koosco.inventoryservice.inventory.application.usecase
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.inventoryservice.common.MessageContext
 import com.koosco.inventoryservice.inventory.application.command.CancelStockCommand
-import com.koosco.inventoryservice.inventory.application.port.IntegrationEventPublisher
-import com.koosco.inventoryservice.inventory.application.port.InventoryRepositoryPort
-import org.springframework.transaction.annotation.Transactional
+import com.koosco.inventoryservice.inventory.application.port.InventoryStockStorePort
+import org.slf4j.LoggerFactory
 
 /**
  * fileName       : CancelStockUseCase
@@ -14,23 +13,25 @@ import org.springframework.transaction.annotation.Transactional
  * description    : 예약된 재고 취소 Usecase
  */
 @UseCase
-class ReleaseStockUseCase(
-    private val inventoryRepository: InventoryRepositoryPort,
-    private val integrationEventPublisher: IntegrationEventPublisher,
-) {
+class ReleaseStockUseCase(private val inventoryStockStore: InventoryStockStorePort) {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     /**
      * 예약 취소 처리 (결제 실패/주문 취소)
      */
-    @Transactional
     fun execute(command: CancelStockCommand, context: MessageContext) {
-        // 각 상품별 재고 취소
-        command.items.forEach { item ->
-            val inventory = inventoryRepository.findBySkuIdOrNull(item.skuId)
-                ?: return@forEach // 해당 재고가 이미 없다면 건너뜀
-
-            inventory.cancelReservation(item.quantity)
-
-            inventoryRepository.save(inventory)
+        inventoryStockStore.cancel(
+            command.items.map {
+                InventoryStockStorePort.CancelItem(
+                    skuId = it.skuId,
+                    quantity = it.quantity,
+                )
+            },
+        ).also {
+            logger.info(
+                "release stock for orderId=${command.orderId}, eventId=${context.correlationId}, causationId=${context.causationId}",
+            )
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.koosco.inventoryservice.inventory.application.contract.outbound.inventory
 
 import com.koosco.inventoryservice.inventory.application.contract.InventoryIntegrationEvent
+import com.koosco.inventoryservice.inventory.domain.enums.StockConfirmFailReason
 
 /**
  * fileName       : StockConfirmedEvent
@@ -30,7 +31,7 @@ data class StockConfirmedEvent(
  */
 data class StockConfirmFailedEvent(
     override val orderId: Long,
-    val reason: String,
+    val reason: StockConfirmFailReason?,
 
     val correlationId: String,
     val causationId: String? = null,
