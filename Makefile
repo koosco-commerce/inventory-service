@@ -33,7 +33,7 @@ test: ## Build and test locally with Docker
 clean: ## Clean up local containers and data
 	@echo "$(YELLOW)Cleaning up local environment...$(NC)"
 	@docker rm -f inventory-service-test 2>/dev/null || true
-	@docker-compose down -v
+	@docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null || true
 	@echo "$(GREEN)✓ Cleanup complete$(NC)"
 
 jar: ## Build jar file with Gradle
