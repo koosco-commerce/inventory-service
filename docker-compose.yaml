@@ -19,6 +19,24 @@ services:
       timeout: 3s
       retries: 3
       start_period: 60s
+  inventory-redis:
+    image: redis:7.2
+    container_name: inventory-redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./infra/redis/inventory_redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  inventory_redis_data:
 
 networks:
   commerce-net:
