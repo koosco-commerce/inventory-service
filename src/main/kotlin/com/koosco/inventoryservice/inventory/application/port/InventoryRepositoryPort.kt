@@ -10,6 +10,8 @@ interface InventoryRepositoryPort {
 
     fun findBySkuIdOrNull(skuId: String): Inventory?
 
+    fun findForUpdate(skuId: String): Inventory?
+
     fun findAllBySkuIdIn(skuIds: List<String>): List<Inventory>
 
     /**

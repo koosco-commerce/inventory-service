@@ -21,6 +21,8 @@ class InventoryRepositoryImpl(
 
     override fun findBySkuIdOrNull(skuId: String): Inventory? = jpaInventoryRepository.findByIdOrNull(skuId)
 
+    override fun findForUpdate(skuId: String): Inventory? = jpaInventoryRepository.findByIdWithLock(skuId)
+
     override fun findAllBySkuIdIn(skuIds: List<String>): List<Inventory> = inventoryQuery.findAllBySkuIdIn(skuIds)
 
     override fun findAllBySkuIdInWithLock(skuIds: List<String>): List<Inventory> =

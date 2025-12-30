@@ -13,7 +13,7 @@ class ReduceStockUseCase(private val inventoryRepository: InventoryRepositoryPor
 
     @Transactional
     fun execute(command: ReduceStockCommand) {
-        val inventory = inventoryRepository.findBySkuIdOrNull(command.skuId)
+        val inventory = inventoryRepository.findForUpdate(command.skuId)
             ?: throw NotFoundException(
                 InventoryErrorCode.INVENTORY_NOT_FOUND,
                 "해당하는 재고를 찾을 수 없습니다. skuId: ${command.skuId}",
@@ -28,7 +28,7 @@ class ReduceStockUseCase(private val inventoryRepository: InventoryRepositoryPor
         val skuIds = command.items.map { it.skuId }
 
         // 2. 한 번의 쿼리로 모든 Inventory 조회
-        val inventories = inventoryRepository.findAllBySkuIdIn(skuIds)
+        val inventories = inventoryRepository.findAllBySkuIdInWithLock(skuIds)
         val inventoryMap = inventories.associateBy { it.skuId }
 
         // 3. 사전 검증: 존재하지 않는 SKU 확인

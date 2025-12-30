@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Query
 
 interface JpaInventoryRepository : JpaRepository<Inventory, String> {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from Inventory i where i.skuId = :skuId")
+    fun findByIdWithLock(skuId: String): Inventory?
+
     /**
      * Pessimistic write lock을 사용하여 재고 조회
      * SELECT ... FOR UPDATE 쿼리 실행
