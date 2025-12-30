@@ -39,7 +39,7 @@ class ConfirmStockUseCase(
         val skuIds = sortedItems.map { it.skuId }
 
         // 1-2. Pessimistic lock을 사용하여 모든 재고 조회
-        val inventories = inventoryRepository.findAllBySkuIdInWithLock(skuIds)
+        val inventories = inventoryRepository.findAllExclusive(skuIds)
 
         // 1-3. 존재하지 않는 SKU 확인
         val foundSkuIds = inventories.map { it.skuId }.toSet()

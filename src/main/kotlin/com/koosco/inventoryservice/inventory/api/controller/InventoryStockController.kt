@@ -5,12 +5,12 @@ import com.koosco.inventoryservice.inventory.api.request.AddStockRequest
 import com.koosco.inventoryservice.inventory.api.request.BulkAddStockRequest
 import com.koosco.inventoryservice.inventory.api.request.BulkReduceStockRequest
 import com.koosco.inventoryservice.inventory.api.request.ReduceStockRequest
-import com.koosco.inventoryservice.inventory.application.command.AddStockCommand
-import com.koosco.inventoryservice.inventory.application.command.BulkAddStockCommand
-import com.koosco.inventoryservice.inventory.application.command.BulkReduceStockCommand
-import com.koosco.inventoryservice.inventory.application.command.ReduceStockCommand
-import com.koosco.inventoryservice.inventory.application.usecase.AddStockUseCase
-import com.koosco.inventoryservice.inventory.application.usecase.ReduceStockUseCase
+import com.koosco.inventoryservice.inventory.application.command.BulkDecreaseStockCommand
+import com.koosco.inventoryservice.inventory.application.command.BulkIncreaseStockCommand
+import com.koosco.inventoryservice.inventory.application.command.DecreaseStockCommand
+import com.koosco.inventoryservice.inventory.application.command.IncreaseStockCommand
+import com.koosco.inventoryservice.inventory.application.usecase.DecreaseStockUseCase
+import com.koosco.inventoryservice.inventory.application.usecase.IncreaseStockUseCase
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.*
@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/inventories")
 class InventoryStockController(
-    private val addStockUseCase: AddStockUseCase,
-    private val reduceStockUseCase: ReduceStockUseCase,
+    private val increaseStockUseCase: IncreaseStockUseCase,
+    private val decreaseStockUseCase: DecreaseStockUseCase,
 ) {
 
     @Operation(
@@ -29,8 +29,8 @@ class InventoryStockController(
     )
     @PostMapping("/{skuId}/increase")
     fun addInventory(@PathVariable skuId: String, @RequestBody body: AddStockRequest): ApiResponse<Any> {
-        addStockUseCase.execute(
-            AddStockCommand(
+        increaseStockUseCase.execute(
+            IncreaseStockCommand(
                 skuId = skuId,
                 addingQuantity = body.quantity,
             ),
@@ -45,10 +45,10 @@ class InventoryStockController(
     )
     @PostMapping("/increase")
     fun addBulkInventories(@RequestBody body: BulkAddStockRequest): ApiResponse<Any> {
-        addStockUseCase.execute(
-            BulkAddStockCommand(
+        increaseStockUseCase.execute(
+            BulkIncreaseStockCommand(
                 items = body.items.map {
-                    BulkAddStockCommand.AddingStockInfo(
+                    BulkIncreaseStockCommand.AddingStockInfo(
                         it.skuId,
                         it.quantity,
                     )
@@ -65,8 +65,8 @@ class InventoryStockController(
     )
     @PostMapping("/{skuId}/decrease")
     fun reduceInventory(@PathVariable skuId: String, @RequestBody body: ReduceStockRequest): ApiResponse<Any> {
-        reduceStockUseCase.execute(
-            ReduceStockCommand(
+        decreaseStockUseCase.execute(
+            DecreaseStockCommand(
                 skuId = skuId,
                 reducingQuantity = body.quantity,
             ),
@@ -81,10 +81,10 @@ class InventoryStockController(
     )
     @PostMapping("/decrease")
     fun reduceBulkInventories(@RequestBody body: BulkReduceStockRequest): ApiResponse<Any> {
-        reduceStockUseCase.execute(
-            BulkReduceStockCommand(
+        decreaseStockUseCase.execute(
+            BulkDecreaseStockCommand(
                 body.items.map {
-                    BulkReduceStockCommand.ReducingStockInfo(
+                    BulkDecreaseStockCommand.ReducingStockInfo(
                         it.skuId,
                         it.quantity,
                     )

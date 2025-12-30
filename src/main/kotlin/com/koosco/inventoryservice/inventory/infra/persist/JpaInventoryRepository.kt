@@ -4,6 +4,7 @@ import com.koosco.inventoryservice.inventory.domain.entity.Inventory
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 
 interface JpaInventoryRepository : JpaRepository<Inventory, String> {
@@ -11,6 +12,16 @@ interface JpaInventoryRepository : JpaRepository<Inventory, String> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from Inventory i where i.skuId = :skuId")
     fun findByIdWithLock(skuId: String): Inventory?
+
+    @Modifying
+    @Query(
+        "UPDATE Inventory i SET i.stock.total = i.stock.total - :quantity WHERE i.skuId = :skuId and i.stock.total >= :quantity",
+    )
+    fun decreaseStockById(skuId: String, quantity: Int): Int
+
+    @Modifying
+    @Query("UPDATE Inventory i SET i.stock.total = i.stock.total + :quantity WHERE i.skuId = :skuId")
+    fun increaseStockById(skuId: String, quantity: Int): Int
 
     /**
      * Pessimistic write lock을 사용하여 재고 조회

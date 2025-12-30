@@ -3,32 +3,32 @@ package com.koosco.inventoryservice.inventory.application.usecase
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.common.core.exception.NotFoundException
 import com.koosco.inventoryservice.common.InventoryErrorCode
-import com.koosco.inventoryservice.inventory.application.command.BulkReduceStockCommand
-import com.koosco.inventoryservice.inventory.application.command.ReduceStockCommand
+import com.koosco.inventoryservice.inventory.application.command.BulkIncreaseStockCommand
+import com.koosco.inventoryservice.inventory.application.command.IncreaseStockCommand
 import com.koosco.inventoryservice.inventory.application.port.InventoryRepositoryPort
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
-class ReduceStockUseCase(private val inventoryRepository: InventoryRepositoryPort) {
+class IncreaseStockUseCase(private val inventoryRepository: InventoryRepositoryPort) {
 
     @Transactional
-    fun execute(command: ReduceStockCommand) {
-        val inventory = inventoryRepository.findForUpdate(command.skuId)
+    fun execute(command: IncreaseStockCommand) {
+        val inventory = inventoryRepository.findBySkuIdOrNull(command.skuId)
             ?: throw NotFoundException(
                 InventoryErrorCode.INVENTORY_NOT_FOUND,
                 "해당하는 재고를 찾을 수 없습니다. skuId: ${command.skuId}",
             )
 
-        inventory.decrease(command.reducingQuantity)
+        inventory.increase(command.addingQuantity)
     }
 
     @Transactional
-    fun execute(command: BulkReduceStockCommand) {
+    fun execute(command: BulkIncreaseStockCommand) {
         // 1. 모든 SKU ID 수집
         val skuIds = command.items.map { it.skuId }
 
         // 2. 한 번의 쿼리로 모든 Inventory 조회
-        val inventories = inventoryRepository.findAllBySkuIdInWithLock(skuIds)
+        val inventories = inventoryRepository.findAllBySkuIdIn(skuIds)
         val inventoryMap = inventories.associateBy { it.skuId }
 
         // 3. 사전 검증: 존재하지 않는 SKU 확인
@@ -43,7 +43,7 @@ class ReduceStockUseCase(private val inventoryRepository: InventoryRepositoryPor
         // 4. 모든 SKU가 존재하면 처리
         command.items.forEach {
             val inventory = inventoryMap[it.skuId]!! // 사전 검증으로 null일 수 없음
-            inventory.increase(it.reducingQuantity)
+            inventory.increase(it.addingQuantity)
         }
     }
 }

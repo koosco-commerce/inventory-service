@@ -6,7 +6,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 
 @Repository
-class InventoryRepositoryImpl(
+class InventoryRepositoryAdapter(
     private val jpaInventoryRepository: JpaInventoryRepository,
     private val inventoryQuery: InventoryQuery,
 ) : InventoryRepositoryPort {
@@ -21,12 +21,15 @@ class InventoryRepositoryImpl(
 
     override fun findBySkuIdOrNull(skuId: String): Inventory? = jpaInventoryRepository.findByIdOrNull(skuId)
 
-    override fun findForUpdate(skuId: String): Inventory? = jpaInventoryRepository.findByIdWithLock(skuId)
+    override fun findExclusive(skuId: String): Inventory? = jpaInventoryRepository.findByIdWithLock(skuId)
 
     override fun findAllBySkuIdIn(skuIds: List<String>): List<Inventory> = inventoryQuery.findAllBySkuIdIn(skuIds)
 
-    override fun findAllBySkuIdInWithLock(skuIds: List<String>): List<Inventory> =
+    override fun findAllExclusive(skuIds: List<String>): List<Inventory> =
         jpaInventoryRepository.findAllBySkuIdInWithLock(skuIds)
 
     override fun existsBySkuId(skuId: String): Boolean = jpaInventoryRepository.existsById(skuId)
+
+    override fun tryDecreaseStock(skuId: String, quantity: Int): Boolean =
+        jpaInventoryRepository.decreaseStockById(skuId, quantity) > 0
 }
