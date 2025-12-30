@@ -1,6 +1,6 @@
 .PHONY: help jar build test clean docker-build docker-clean \
         gradle-build gradle-test gradle-clean \
-        deploy-local deploy-dev deploy-prod validate \
+        deploy-local deploy-load deploy-dev deploy-prod validate \
         k8s-status k8s-describe k8s-stop k8s-start k8s-scale k8s-clean \
         flyway-history flyway-history-local flyway-clean flyway-clean-local flyway-reset flyway-reset-local
 
@@ -69,8 +69,11 @@ gradle-clean: ## Clean Gradle build
 # Kubernetes Deployment
 # ============================================
 
-deploy-local: ## Deploy to local Kubernetes (Minikube/Kind)
+deploy-local: ## Deploy to local docker compose
 	@./scripts/deploy-k8s.sh local
+
+deploy-load: ## Deploy to local docker compose
+	@./scripts/deploy-k8s.sh load
 
 deploy-dev: ## Deploy to dev environment
 	@./scripts/deploy-k8s.sh dev

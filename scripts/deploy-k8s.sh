@@ -82,13 +82,18 @@ case ${ENVIRONMENT} in
         echo ""
 
         # Docker Compose로 실행
-        echo "Starting services with Docker Compose..."
+        echo "Starting services with Docker Compose (profile: local)..."
+        echo "  - Kafka: host.docker.internal:9092"
         if command -v docker-compose &> /dev/null; then
+            SPRING_PROFILES_ACTIVE=local \
+            SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
             docker-compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
         else
+            SPRING_PROFILES_ACTIVE=local \
+            SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
             docker compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
         fi
-        echo -e "${GREEN}✓${NC} Services started"
+        echo -e "${GREEN}✓${NC} Services started with profile: local"
         echo ""
 
         echo -e "${GREEN}========================================${NC}"
@@ -98,14 +103,88 @@ case ${ENVIRONMENT} in
         echo "Access application:"
         echo "  - MariaDB: localhost:3306"
         echo "  - App: Build and run the application locally"
+        echo "  - Profile: local"
         echo ""
         echo "Useful commands:"
         echo "  - View logs: docker-compose -f docker-compose.yaml logs -f"
         echo "  - Stop: docker-compose -f docker-compose.yaml down"
-        echo "  - Restart: docker-compose -f docker-compose.yaml restart"
+        echo "  - Restart: SPRING_PROFILES_ACTIVE=local SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 docker-compose -f docker-compose.yaml restart"
         echo ""
         exit 0
         ;;
+
+    load)
+            echo -e "${YELLOW}[Load Test Mode]${NC} Using Docker Compose"
+            echo ""
+
+            # docker-compose 확인
+            if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null 2>&1; then
+                echo -e "${RED}Error: docker-compose not found${NC}"
+                exit 1
+            fi
+
+            # GitHub credentials 확인
+            if [ -z "$GH_USER" ] || [ -z "$GH_TOKEN" ]; then
+                echo -e "${RED}Error: GitHub credentials not found${NC}"
+                echo ""
+                echo "GitHub Package Registry credentials are required for building the image."
+                echo ""
+                echo "Please set environment variables:"
+                echo "  export GH_USER=your-github-username"
+                echo "  export GH_TOKEN=your-github-token"
+                echo ""
+                exit 1
+            fi
+
+            echo -e "${YELLOW}Using GitHub credentials:${NC}"
+            echo "  User: ${GH_USER}"
+            echo "  Token: ${GH_TOKEN:0:4}****"
+            echo ""
+
+            # Gradle로 jar 빌드
+            echo "Building jar file with Gradle..."
+            cd ${PROJECT_DIR}
+            ./gradlew bootJar
+            echo -e "${GREEN}✓${NC} Jar built successfully"
+            echo ""
+
+            # Docker 이미지 빌드
+            echo "Building Docker image..."
+            docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+            echo -e "${GREEN}✓${NC} Image built successfully"
+            echo ""
+
+            # Docker Compose로 실행
+            echo "Starting services with Docker Compose (profile: load)..."
+            echo "  - Kafka: 172.31.32.89:9092"
+            if command -v docker-compose &> /dev/null; then
+                SPRING_PROFILES_ACTIVE=load \
+                SPRING_KAFKA_BOOTSTRAP_SERVERS=172.31.32.89:9092 \
+                docker-compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
+            else
+                SPRING_PROFILES_ACTIVE=load \
+                SPRING_KAFKA_BOOTSTRAP_SERVERS=172.31.32.89:9092 \
+                docker compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
+            fi
+            echo -e "${GREEN}✓${NC} Services started with profile: load"
+            echo ""
+
+            echo -e "${GREEN}========================================${NC}"
+            echo -e "${GREEN}Deployment completed successfully!${NC}"
+            echo -e "${GREEN}========================================${NC}"
+            echo ""
+            echo "Access application:"
+            echo "  - MariaDB: localhost:3306"
+            echo "  - App: Build and run the application locally"
+            echo "  - Profile: load"
+            echo ""
+            echo "Useful commands:"
+            echo "  - View logs: docker-compose -f docker-compose.yaml logs -f"
+            echo "  - Stop: docker-compose -f docker-compose.yaml down"
+            echo "  - Restart: SPRING_PROFILES_ACTIVE=load SPRING_KAFKA_BOOTSTRAP_SERVERS=172.31.32.89:9092 docker-compose -f docker-compose.yaml restart"
+            echo ""
+            exit 0
+            ;;
 
     dev)
         echo -e "${YELLOW}[Dev Mode]${NC} Using local k3d cluster"
